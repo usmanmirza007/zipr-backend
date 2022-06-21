@@ -14,13 +14,14 @@ enum UserType {
 }
 
 model Customer {
-  id         Int      @id @default(autoincrement())
-  firstName  String
-  lastName   String
-  email      String   @unique
-  password   String?
-  picture    String?
-  userType   UserType
+  id          Int           @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String        @unique
+  password    String?
+  picture     String?
+  userType    UserType
+  FollowOrder FollowOrder[]
 }
 
 model Vendor {
@@ -36,55 +37,34 @@ model Vendor {
   userType   UserType
 }
 
-// enum Visible {
-//   PUBLIC
-//   PRIVATE
-// }
+model Order {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  picture     String
+  location    String
+  Tag         Tag[]
+  FollowOrder FollowOrder[]
+}
 
-// model Tournament {
-//   id               Int                @id @default(autoincrement())
-//   title            String
-//   visibility       Visible
-//   startDate        DateTime
-//   endDate          DateTime
-//   registrationDate DateTime
-//   fee              Int
-//   user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   userId           Int
-//   FollowTournament FollowTournament[]
-// }
+model Tag {
+  id      Int    @id @default(autoincrement())
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId Int
+  tag1    String
+  tag2    String
+  tag3    String
+  tag4    String
+  tag5    String
+}
 
-// model Team {
-//   id           Int      @id @default(autoincrement())
-//   name         String
-//   playerNumber Int
-//   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   userId       Int
-//   Player       Player[]
-// }
+model FollowOrder {
+  id      Int      @id @default(autoincrement())
+  user    Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId Int
 
-// model Player {
-//   id     Int    @id @default(autoincrement())
-//   name   String
-//   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-//   teamId Int
-// }
-
-// model FollowTournament {
-//   id           Int        @id @default(autoincrement())
-//   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   userId       Int
-//   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-//   tournamentId Int
-
-//   @@unique([userId, tournamentId], name: "unique_following_user")
-// }
-
-// model Match {
-//   id           Int      @id @default(autoincrement())
-//   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-//   userId       Int
-//   firstTeamId  Int
-//   secondTeamId Int
-//   startDate    DateTime
-// }
+  @@unique([userId, orderId], name: "unique_following_user")
+}

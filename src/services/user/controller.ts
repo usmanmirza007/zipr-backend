@@ -104,6 +104,205 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 
 };
 
+export const addOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+  const { name, description, price, location, tags, picture } = req.body;
+
+  if (user.userType === UserType.VENDOR) {
+
+    try {
+      const order = await prisma.order.create({
+        data: {
+          name: name,
+          description: description,
+          price: price,
+          location: location,
+          picture: picture
+        }
+      })
+      
+      for (const tag of tags) {
+        
+        await prisma.tag.create({
+          data: {
+            tag1: tag.tag1,
+            tag2: tag.tag2,
+            tag3: tag.tag3,
+            tag4: tag.tag4,
+            tag5: tag.tag5,
+            orderId: order.id
+          }
+        })
+      }
+      return res.status(200).json({ success: true })
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'something went wrong' })
+    }
+  } else {
+    return res.status(404).json({ message: 'User not found please login first' })
+
+  }
+
+};
+
+export const editOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+  const { orderId, name, description, price, location, tags, picture } = req.body;
+  if (user.userType === UserType.VENDOR) {
+
+    try {
+      const existingOrder = await prisma.order.findUnique({ where: { id: parseInt(orderId) } })
+
+      if (existingOrder) {
+        await prisma.order.update({
+          where: { id: existingOrder.id },
+          data: {
+            name: name,
+            description: description,
+            price: price,
+            location: location,
+            picture: picture
+          }
+        })
+        for (const tag of tags) {
+
+          await prisma.tag.updateMany({
+            where: { orderId: existingOrder.id },
+            data: {
+              tag1: tag.tag1,
+              tag2: tag.tag2,
+              tag3: tag.tag3,
+              tag4: tag.tag4,
+              tag5: tag.tag5,
+            }
+          })
+        }
+
+        return res.status(200).json({ message: "Order has been upadted" })
+      } else {
+        return res.status(404).json({ message: "Order not found" })
+      }
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'something went wrong' })
+    }
+  } else {
+    return res.status(404).json({ message: 'User not found please login first' })
+  }
+};
+
+export const getOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+
+  if (user.userType === UserType.VENDOR) {
+
+    try {
+      const order = await prisma.order.findMany()
+
+      return res.status(200).json(order)
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'something went wrong' })
+    }
+  }
+
+};
+
+
+export const orderFollow = async (req: Request, res: Response, next: NextFunction) => {
+
+  const userId = (req as any).user.id
+  const { orderId, follow } = req.body
+  if (!orderId)
+    return res
+      .status(400)
+      .json({ error: 'Request should have orderId' });
+
+  try {
+
+    if (follow) {
+
+      const userFollowing = await prisma.followOrder.upsert({
+        where: {
+          unique_following_user: {
+            userId: userId,
+            orderId: orderId
+          }
+        },
+        create: {
+          userId: userId,
+          orderId: orderId
+        },
+        update: {
+          userId: userId,
+          orderId: orderId
+        },
+      })
+
+    } else {
+
+      const userFollowing = await prisma.followOrder.delete({
+        where: {
+          unique_following_user: {
+            userId: userId,
+            orderId: orderId
+          }
+        }
+      })
+
+    }
+    return res.status(200).json({ success: true });
+
+
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+}
+
+
+export const getOrderFollow = async (req: Request, res: Response, next: NextFunction) => {
+
+  const userId = (req as any).user.id
+  if (!userId)
+    return res
+      .status(400)
+      .json({ error: 'Request should have userId' });
+
+  try {
+
+    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FollowOrder: true } })
+    const orderCondition: Array<{ orderId: number }> = []
+
+    if (user) {
+      for (const order of user.FollowOrder) {
+        orderCondition.push({ orderId: order.id })
+      }
+    }
+
+    const FollowingOrder = await prisma.followOrder.findMany({
+      include: { order: true }
+    })
+    var singleUserOrder: Array<any> = []
+    const follow = FollowingOrder.map((value) => {
+      if (value.userId == userId) {
+        singleUserOrder.push(value.order)
+      }
+    })
+
+    if (singleUserOrder.length) {
+      return res.status(200).json(singleUserOrder);
+    }
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+}
+
+
+
 
 // export const createTournament = async (req: Request, res: Response, next: NextFunction) => {
 //   const { title, visibility, startDate, endDate, registrationDate, fee } = req.body;
@@ -344,98 +543,6 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 //     return res.status(500).json({ message: 'something went wrong' })
 //   }
 // };
-
-// export const tournamentFollow = async (req: Request, res: Response, next: NextFunction) => {
-
-//   const userId = (req as any).user.id
-//   const { tournamentId, follow } = req.body
-//   if (!tournamentId)
-//     return res
-//       .status(400)
-//       .json({ error: 'Request should have tournamentId' });
-
-//   try {
-
-//     if (follow) {
-
-//       const userFollowing = await prisma.followTournament.upsert({
-//         where: {
-//           unique_following_user: {
-//             userId: userId,
-//             tournamentId: tournamentId
-//           }
-//         },
-//         create: {
-//           userId: userId,
-//           tournamentId: tournamentId
-//         },
-//         update: {
-//           userId: userId,
-//           tournamentId: tournamentId
-//         },
-//       })
-
-//     } else {
-
-//       const userFollowing = await prisma.followTournament.delete({
-//         where: {
-//           unique_following_user: {
-//             userId: userId,
-//             tournamentId: tournamentId
-//           }
-//         }
-//       })
-
-//     }
-//     return res.status(200).json({ success: true });
-
-
-//   } catch (error) {
-//     return res.status(500).json(error);
-//   }
-// }
-
-// export const getTournamentFollow = async (req: Request, res: Response, next: NextFunction) => {
-
-//   const userId = (req as any).user.id
-//   if (!userId)
-//     return res
-//       .status(400)
-//       .json({ error: 'Request should have userId' });
-
-//   try {
-
-//     const user = await prisma.user.findUnique({ where: { id: userId }, include: { Tournament: true } })
-//     const teamCondition: Array<{ tournamentId: number }> = []
-
-//     if (user) {
-
-//       for (const tournament of user.Tournament) {
-//         teamCondition.push({ tournamentId: tournament.id })
-//       }
-//     }
-
-//     const FollowingTournament = await prisma.followTournament.findMany({
-//       include: { tournament: true }
-//     })
-//     var singleUserTournament: Array<any> = []
-//     const follow = FollowingTournament.map((value) => {
-
-//       if (value.userId == userId) {
-//         singleUserTournament.push(value.tournament)
-//       }
-//     })
-
-//     if (singleUserTournament.length) {
-
-//       return res.status(200).json(singleUserTournament);
-//     }
-
-
-//   } catch (error) {
-//     return res.status(500).json(error);
-//   }
-// }
 
 // export const createMatch = async (req: Request, res: Response, next: NextFunction) => {
 //   const { firstTeamId, secondTeamId, startDate } = req.body;
