@@ -35,29 +35,32 @@ model Vendor {
   location   String?
   picture    String?
   userType   UserType
+  Order      Order[]
 }
 
 model Order {
   id          Int           @id @default(autoincrement())
+  vendor      Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId    Int
   name        String
   description String
   price       Float
   picture     String
   location    String
-  Tag         Tag[]
+  Tag         Json          
   FollowOrder FollowOrder[]
 }
 
-model Tag {
-  id      Int    @id @default(autoincrement())
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId Int
-  tag1    String
-  tag2    String
-  tag3    String
-  tag4    String
-  tag5    String
-}
+// model Tag {
+//   id      Int    @id @default(autoincrement())
+//   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+//   orderId Int
+//   tag1    String?
+//   tag2    String?
+//   tag3    String?
+//   tag4    String?
+//   tag5    String?
+// }
 
 model FollowOrder {
   id      Int      @id @default(autoincrement())

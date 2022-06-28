@@ -11,7 +11,6 @@ const prisma = new PrismaClient();
 
 export const customerSignup = async (req: Request, res: Response, next: NextFunction) => {
   const { firstName, lastName, email, password, type } = req.body;
-  console.log('FOFO', req.body);
 
   let usersType: UserType = type
 
