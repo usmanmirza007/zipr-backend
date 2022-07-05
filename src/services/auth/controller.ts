@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response, ErrorRequestHandler } from 'express';
 import { PrismaClient, UserType } from '@prisma/client';
-const readXlsxFile = require("read-excel-file/node");
-const excel = require("exceljs");
 var bcrypt = require('bcryptjs');
 var path = require("path");
 const jwt = require('jsonwebtoken')
@@ -31,7 +29,7 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
       try {
 
         var hash = bcrypt.hashSync(password, 8);
-        const user = await prisma.customer.create({
+        await prisma.customer.create({
           data: {
             firstName: firstName,
             lastName: lastName,
@@ -42,6 +40,8 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
         })
         return res.status(200).json({ success: true })
       } catch (error) {
+        console.log('error', error);
+        
         return res.status(500).json({ message: 'something went wrong' })
       }
     }
@@ -54,15 +54,15 @@ export const vendorSignup = async (req: Request, res: Response, next: NextFuncti
   let usersType: UserType = type
   console.log('fofo', req.body);
   
-  if (UserType.VENDOR == type) {
-    usersType = UserType.VENDOR
+  if (UserType.VENDER == type) {
+    usersType = UserType.VENDER
   }
   if (!firstName || !lastName || !email || !password || !type || !vendorName) {
 
     return res.status(400).send({ message: 'Incomplete parameter' });
   } else {
 
-    const exsitingUser = await prisma.vendor.findUnique({ where: { email: email } })
+    const exsitingUser = await prisma.vender.findUnique({ where: { email: email } })
 
     if (exsitingUser) {
       return res.status(409).json({ message: 'User with email is already register' })
@@ -71,18 +71,20 @@ export const vendorSignup = async (req: Request, res: Response, next: NextFuncti
       try {
 
         var hash = bcrypt.hashSync(password, 8);
-        const user = await prisma.vendor.create({
+        await prisma.vender.create({
           data: {
             firstName: firstName,
             lastName: lastName,
             userType: usersType,
             email: email,
-            vendorName: vendorName,
+            venderName: vendorName,
             password: hash,
           }
         })
         return res.status(200).json({ success: true })
       } catch (error) {
+        console.log('err', error);
+        
         return res.status(500).json({ message: 'something went wrong' })
       }
     }
@@ -97,12 +99,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     return res.status(400).send({ message: 'Incomplete parameter' });
   } else {
     const customer = await prisma.customer.findUnique({ where: { email: email } })
-    const vendor = await prisma.vendor.findUnique({ where: { email: email } })
+    const vendor = await prisma.vender.findUnique({ where: { email: email } })
     console.log('customerss', customer);
 
     if (customer) {
       // customer user login
-      console.log('customer');
 
       let matched = bcrypt.compareSync(password, customer.password);
 
@@ -144,7 +145,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             expiresIn: '4h',
             algorithm: secret_key.algorithms[0]
           });
-          return res.status(200).json({ token: data, type: UserType.VENDOR })
+          return res.status(200).json({ token: data, type: UserType.VENDER })
         } catch (error) {
           return res.status(500).json({ message: 'something went wrong' })
         }

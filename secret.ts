@@ -1,6 +1,6 @@
 
   export const secret_key = {
     algorithms: ['HS256'],
-    secret: 'HOesEGjAfc', // TODO Put in process.env
+    secret: 'n2CwNlPwXpiI', // TODO Put in process.env
   };
  

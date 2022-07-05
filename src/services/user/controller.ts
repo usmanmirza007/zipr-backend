@@ -40,16 +40,16 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
   } else {
     // Edit vendor user
     if (vendorName && bio && location) {
-      const exsitingVendor = await prisma.vendor.findUnique({ where: { id: parseInt(user.id) } })
+      const exsitingVendor = await prisma.vender.findUnique({ where: { id: parseInt(user.id) } })
       if (exsitingVendor) {
 
         try {
-          await prisma.vendor.update({
+          await prisma.vender.update({
             where: {
               id: exsitingVendor.id
             },
             data: {
-              vendorName: vendorName,
+              venderName: vendorName,
               bio: bio,
               location: location,
             }
@@ -88,7 +88,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   } else {
 
     try {
-      const getUser = await prisma.vendor.findUnique({ where: { id: parseInt(user.id) } })
+      const getUser = await prisma.vender.findUnique({ where: { id: parseInt(user.id) } })
 
       if (getUser) {
         return res.status(200).json(getUser)
@@ -108,7 +108,7 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
   const user = (req as any).user
   const { name, description, price, location, tags, picture } = req.body;
 
-  if (user.userType === UserType.VENDOR ) {
+  if (user.userType === UserType.VENDER ) {
 
     try {
         
@@ -119,7 +119,7 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
             price: parseFloat(price),
             location: location,
             picture: picture,
-            vendorId: parseInt(user.id),
+            venderId: parseInt(user.id),
             Tag: tags
           }
         })
@@ -140,7 +140,7 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
 export const editOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
   const { orderId, name, description, price, location, tags, picture } = req.body;
-  if (user.userType === UserType.VENDOR) {
+  if (user.userType === UserType.VENDER) {
 
     try {
       const existingOrder = await prisma.order.findUnique({ where: { id: parseInt(orderId) } })
@@ -175,10 +175,10 @@ export const editOrder = async (req: Request, res: Response, next: NextFunction)
 export const getUserOrders = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
 
-  if (user.userType === UserType.VENDOR) {
+  if (user.userType === UserType.VENDER) {
 
     try {
-      const order = await prisma.order.findMany({ where: {vendorId: parseInt(user.id)}})
+      const order = await prisma.order.findMany({ where: {venderId: parseInt(user.id)}})
 
       return res.status(200).json(order)
 
@@ -194,7 +194,7 @@ export const getSingleOrder = async (req: Request, res: Response, next: NextFunc
   const user = (req as any).user
   const { orderId } = req.params
   
-  if (user.userType === UserType.VENDOR) {
+  if (user.userType === UserType.VENDER) {
 
     try {
       const order = await prisma.order.findUnique({ where: {id: parseInt(orderId)}})
@@ -278,7 +278,6 @@ export const orderFollow = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-
 export const getOrderFollow = async (req: Request, res: Response, next: NextFunction) => {
 
   const userId = (req as any).user.id
@@ -310,6 +309,94 @@ export const getOrderFollow = async (req: Request, res: Response, next: NextFunc
 
     if (singleUserOrder.length) {
       return res.status(200).json(singleUserOrder);
+    }
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+}
+
+export const orderFavorite = async (req: Request, res: Response, next: NextFunction) => {
+
+  const userId = (req as any).user.id
+  const { orderId, favorite } = req.body
+  if (!orderId)
+    return res
+      .status(400)
+      .json({ error: 'Request should have orderId' });
+
+  try {
+
+    if (favorite) {
+
+      await prisma.favoriteOrder.upsert({
+        where: {
+          unique_favorite_order: {
+            userId: userId,
+            orderId: orderId
+          }
+        },
+        create: {
+          userId: userId,
+          orderId: orderId
+        },
+        update: {
+          userId: userId,
+          orderId: orderId
+        },
+      })
+
+    } else {
+
+      await prisma.favoriteOrder.delete({
+        where: {
+          unique_favorite_order: {
+            userId: userId,
+            orderId: orderId
+          }
+        }
+      })
+
+    }
+    return res.status(200).json({ success: true });
+
+
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+}
+
+
+export const getOrderFavorite = async (req: Request, res: Response, next: NextFunction) => {
+
+  const userId = (req as any).user.id
+  if (!userId)
+    return res
+      .status(400)
+      .json({ error: 'Request should have userId' });
+
+  try {
+
+    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FavoriteOrder: true } })
+    const orderCondition: Array<{ orderId: number }> = []
+
+    if (user) {
+      for (const order of user.FavoriteOrder) {
+        orderCondition.push({ orderId: order.id })
+      }
+    }
+
+    const favoriteOrder = await prisma.favoriteOrder.findMany({
+      include: { order: true }
+    })
+    var singleUserFavoriteOrder: Array<any> = []
+    favoriteOrder.map((value) => {
+      if (value.userId == userId) {
+        singleUserFavoriteOrder.push(value.order)
+      }
+    })
+
+    if (singleUserFavoriteOrder.length) {
+      return res.status(200).json(singleUserFavoriteOrder);
     }
   } catch (error) {
     return res.status(500).json(error);
