@@ -20,7 +20,7 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
     return res.status(400).send({ message: 'Incomplete parameter' });
   } else {
 
-    const exsitingUser = await prisma.customer.findUnique({ where: { email: email } })
+    const exsitingUser = await prisma.user.findUnique({ where: { email: email } })
 
     if (exsitingUser) {
       return res.status(409).json({ message: 'User with email is already register' })
@@ -29,16 +29,41 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
       try {
 
         var hash = bcrypt.hashSync(password, 8);
-        await prisma.customer.create({
+        const customer = await prisma.customer.create({
+          data: {
+            isActive: true,
+          }
+        })
+        const vender = await prisma.vender.create({
+          data: {
+            isActive: false,
+          }
+        })
+        if (customer.id && vender.id) {
+          
+        const user = await prisma.user.create({
           data: {
             firstName: firstName,
             lastName: lastName,
             userType: usersType,
             email: email,
             password: hash,
+            venderId: vender.id,
+            customerId: customer.id
           }
         })
-        return res.status(200).json({ success: true })
+
+        const data = await jwt.sign({
+          username: email,
+          userType: user.userType,
+          id: user.id,
+        }, secret_key.secret, {
+          expiresIn: '4h',
+          algorithm: secret_key.algorithms[0]
+        });
+        return res.status(200).json({ token: data, type: UserType.CUSTOMER })
+      }
+
       } catch (error) {
         console.log('error', error);
         
@@ -52,17 +77,15 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
 export const vendorSignup = async (req: Request, res: Response, next: NextFunction) => {
   const { firstName, lastName, email, password, type, vendorName } = req.body;
   let usersType: UserType = type
-  console.log('fofo', req.body);
   
   if (UserType.VENDER == type) {
     usersType = UserType.VENDER
   }
-  if (!firstName || !lastName || !email || !password || !type || !vendorName) {
-
+  if (!firstName || !lastName || !email || !password || !type) {
     return res.status(400).send({ message: 'Incomplete parameter' });
   } else {
 
-    const exsitingUser = await prisma.vender.findUnique({ where: { email: email } })
+    const exsitingUser = await prisma.user.findUnique({ where: { email: email } })
 
     if (exsitingUser) {
       return res.status(409).json({ message: 'User with email is already register' })
@@ -71,17 +94,43 @@ export const vendorSignup = async (req: Request, res: Response, next: NextFuncti
       try {
 
         var hash = bcrypt.hashSync(password, 8);
-        await prisma.vender.create({
+        const customer = await prisma.customer.create({
+          data: {
+            isActive: false,
+          }
+        })
+        
+        const vender = await prisma.vender.create({
+          data: {
+            isActive: true,
+          }
+        })
+
+        if (customer.id && vender.id) {
+          
+        const user = await prisma.user.create({
           data: {
             firstName: firstName,
             lastName: lastName,
             userType: usersType,
             email: email,
-            venderName: vendorName,
             password: hash,
+            venderId: vender.id,
+            customerId: customer.id
           }
         })
-        return res.status(200).json({ success: true })
+        
+        const data = await jwt.sign({
+          username: email,
+          userType: user.userType,
+          id: user.id,
+        }, secret_key.secret, {
+          expiresIn: '4h',
+          algorithm: secret_key.algorithms[0]
+        });
+        return res.status(200).json({ token: data, type: UserType.VENDER })
+      }
+
       } catch (error) {
         console.log('err', error);
         
@@ -98,23 +147,21 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   if (!email || !password) {
     return res.status(400).send({ message: 'Incomplete parameter' });
   } else {
-    const customer = await prisma.customer.findUnique({ where: { email: email } })
-    const vendor = await prisma.vender.findUnique({ where: { email: email } })
-    console.log('customerss', customer);
+    const user = await prisma.user.findUnique({ where: { email: email }, include: {customer: true, vender: true} })
 
-    if (customer) {
+    if (user?.customer.isActive) {
       // customer user login
 
-      let matched = bcrypt.compareSync(password, customer.password);
+      let matched = bcrypt.compareSync(password, user.password);
 
       if (matched) {
         try {
-          const customerData = customer;
+          const customerData = user;
 
           // delete customerData.password;
           const data = await jwt.sign({
             username: email,
-            userType: customer.userType,
+            userType: user.userType,
             id: customerData.id,
           }, secret_key.secret, {
             expiresIn: '4h',
@@ -128,18 +175,18 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       } else {
         return res.status(401).json({ message: 'Incorrect credentials' })
       }
-    } else if (vendor) {
+    } else if (user?.vender?.isActive) {
       // vendor user login
-      let matched = bcrypt.compareSync(password, vendor.password);
+      let matched = bcrypt.compareSync(password, user.password);
 
       if (matched) {
         try {
-          const vendorData = vendor;
+          const vendorData = user;
 
           // delete vendorData.password;
           const data = await jwt.sign({
             username: email,
-            userType: vendor.userType,
+            userType: user.userType,
             id: vendorData.id,
           }, secret_key.secret, {
             expiresIn: '4h',

@@ -8,6 +8,7 @@ export const userRouter = express.Router();
 
 userRouter.route('/').get(jwt(secret_key), controller.getUsers);
 userRouter.route('/edit').patch(jwt(secret_key), controller.editUser);
+userRouter.route('/status').patch(jwt(secret_key), controller.changeUserStatus);
 userRouter.route('/order').post(jwt(secret_key), controller.addOrder);
 userRouter.route('/order').get(jwt(secret_key), controller.getUserOrders);
 userRouter.route('/order').patch(jwt(secret_key), controller.editOrder);

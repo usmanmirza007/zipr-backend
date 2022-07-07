@@ -1,29 +1,46 @@
 import { NextFunction, Request, Response } from 'express';
 import { PrismaClient, UserType } from '@prisma/client';
+import { secret_key } from '../../../secret';
+const jwt = require('jsonwebtoken')
 
 const prisma = new PrismaClient();
 
 
 export const editUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { firstName, lastName, vendorName, bio, location } = req.body;
+  const { firstName, lastName, vendorName, picture, bio, location, type } = req.body;
   const user = (req as any).user
-
-  if (UserType.CUSTOMER == user.userType) {
+    
     // Edit customer user
-    if (firstName && lastName) {
-      const exsitingCustomer = await prisma.customer.findUnique({ where: { id: parseInt(user.id) } })
-      if (exsitingCustomer) {
+    if (firstName || lastName || picture || bio || location ) {
+      const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
+      if (exsitingUser) {
 
         try {
-          await prisma.customer.update({
-            where: {
-              id: exsitingCustomer.id
-            },
-            data: {
-              firstName: firstName,
-              lastName: lastName,
-            }
-          })
+          if (UserType.CUSTOMER == user.userType) {
+            await prisma.user.update({
+              where: {
+                id: exsitingUser.id,
+              },
+              data: {
+                firstName: firstName,
+                lastName: lastName,
+                picture: picture,
+              }
+            })
+          } else {
+            await prisma.user.update({
+              where: {
+                id: exsitingUser.id,
+              },
+              data: {
+                firstName: firstName,
+                lastName: lastName,
+                picture: picture,
+                vender: { update: { bio: bio, location: location } }
+              }
+            })
+          }
+         
           return res.status(200).json({ success: true })
         } catch (error) {
           console.log('err', error);
@@ -31,49 +48,67 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
         }
 
       } else {
-        return res.status(404).json({ message: 'Customer not found' })
+        return res.status(404).json({ message: 'User not found' })
       }
 
     } else {
       return res.status(400).send({ message: 'Incomplete parameter' });
     }
-  } else {
-    // Edit vendor user
-    if (vendorName && bio && location) {
-      const exsitingVendor = await prisma.vender.findUnique({ where: { id: parseInt(user.id) } })
-      if (exsitingVendor) {
+ 
+}
+
+
+export const changeUserStatus = async (req: Request, res: Response, next: NextFunction) => {
+  const { type } = req.body;
+  const user = (req as any).user
+    
+    if ( type ) {
+      const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
+      if (exsitingUser) {
 
         try {
-          await prisma.vender.update({
+          const user = await prisma.user.update({
             where: {
-              id: exsitingVendor.id
+              id: exsitingUser.id,
             },
             data: {
-              venderName: vendorName,
-              bio: bio,
-              location: location,
+              userType: type,
+              vender: {update: {isActive: type === UserType.VENDER ? true : false }},
+              customer: {update: {isActive: type === UserType.CUSTOMER ? true : false }}
             }
           })
-          return res.status(200).json({ success: true })
+          const data = await jwt.sign({
+            username: exsitingUser.email,
+            userType: type,
+            id: exsitingUser.id,
+          }, secret_key.secret, {
+            expiresIn: '4h',
+            algorithm: secret_key.algorithms[0]
+          });
+          return res.status(200).json({ token: data, type: type })
         } catch (error) {
           console.log('err', error);
           return res.status(500).json({ message: 'something went wrong' })
         }
 
       } else {
-        return res.status(404).json({ message: 'Vendor not found' })
+        return res.status(404).json({ message: 'User not found' })
       }
+
+    } else {
+      return res.status(400).send({ message: 'Incomplete parameter' });
     }
-  }
 }
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-
+  console.log('fofo', user.userType);
+  
   if (user.userType === UserType.CUSTOMER) {
-
+    console.log('test1');
+    
     try {
-      const getUser = await prisma.customer.findUnique({ where: { id: parseInt(user.id) } })
+      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: { customer: true } })
 
       if (getUser) {
         return res.status(200).json(getUser)
@@ -86,9 +121,10 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       return res.status(500).json({ message: 'something went wrong' })
     }
   } else {
+    console.log('test2');
 
     try {
-      const getUser = await prisma.vender.findUnique({ where: { id: parseInt(user.id) } })
+      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: {vender: true} })
 
       if (getUser) {
         return res.status(200).json(getUser)
