@@ -102,13 +102,11 @@ export const changeUserStatus = async (req: Request, res: Response, next: NextFu
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  console.log('fofo', user.userType);
   
-  if (user.userType === UserType.CUSTOMER) {
-    console.log('test1');
+  if (user.userType != UserType.CUSTOMER) {
     
     try {
-      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: { customer: true } })
+      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: { vender: true } })
 
       if (getUser) {
         return res.status(200).json(getUser)
@@ -121,10 +119,9 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       return res.status(500).json({ message: 'something went wrong' })
     }
   } else {
-    console.log('test2');
 
     try {
-      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: {vender: true} })
+      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: {customer: true} })
 
       if (getUser) {
         return res.status(200).json(getUser)
@@ -142,8 +139,57 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 
 export const addOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { name, description, price, location, tags, picture } = req.body;
+  const { name, description, price, location, tags, pictures, category } = req.body;
 
+  const categories = [
+    { label: "All", value: "All" },
+    { label: "Books", value: "Books" },
+    { label: "Clothing", value: "Clothing" },
+    { label: "Fashion", value: "Fashion" },
+    { label: "Wearable Accessories", value: "Wearable Accessories" },
+    { label: "Stationery", value: "Stationery" },
+    { label: "Office Supplies", value: "Office Supplies" },
+    { label: "Beauty & Personal Care", value: "Beauty & Personal Care" },
+    { label: "Furniture", value: "Furniture" },
+    { label: "Home & Appliances", value: "Home & Appliances" },
+    { label: "Tools & Home Improvements", value: "Tools & Home Improvements" },
+    { label: "Automotive", value: "Automotive" },
+    { label: "Exercise & Fitness", value: "Exercise & Fitness" },
+    { label: "Sports", value: "Sports" },
+    { label: "Electronics", value: "Electronics" },
+    { label: "Personal Computers", value: "Personal Computers" },
+    { label: "Tech Accessories", value: "Tech Accessories" },
+    { label: "ICT", value: "ICT" },
+    { label: "Health and Hygiene", value: "Health and Hygiene" },
+    { label: "Industrial & Scientific", value: "Industrial & Scientific" },
+    { label: "Academics", value: "Academics" },
+    { label: "Academic Services", value: "Academic Services" },
+    { label: "Education", value: "Education" },
+    { label: "Cuisine", value: "Cuisine" },
+    { label: "Grocery & Food", value: "Grocery & Food" },
+    { label: "Arts & Crafts", value: "Arts & Crafts" },
+    { label: "Creative Art", value: "Creative Art" },
+    { label: "Entertainment", value: "Entertainment" },
+    { label: "Social", value: "Social" },
+    { label: "Equipment", value: "Equipment" },
+    { label: "DIY", value: "DIY" },
+    { label: "DIY Services", value: "DIY Services" },
+    { label: "Camera & Photo", value: "Camera & Photo" },
+    { label: "Music & Video", value: "Music & Video" },
+    { label: "Outdoors", value: "Outdoors" },
+    { label: "Software", value: "Software" },
+    { label: "Video Games", value: "Video Games" },
+    { label: "Musical Instruments", value: "Musical Instruments" },
+    { label: "Financial Services", value: "Financial Services" },
+    { label: "Party Supplies", value: "Party Supplies" },
+    { label: "Convenience Suppies", value: "Convenience Suppies" },
+    { label: "Other", value: "Other" }
+  ]
+
+  // for (const cate of categories) {
+  //   await prisma.category.create({data: {label: cate.label, value: cate.value}})
+    
+  // }
   if (user.userType === UserType.VENDER ) {
 
     try {
@@ -154,12 +200,22 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
             description: description,
             price: parseFloat(price),
             location: location,
-            picture: picture,
+            picture: pictures,
             venderId: parseInt(user.id),
-            Tag: tags
+            Tag: tags,
+            category: category,
           }
         })
        
+      const exsitingCategory = (await prisma.category.findMany()).find((val) => val.label === category)
+      if (!exsitingCategory) {
+        await prisma.category.create({
+          data: {
+            label: category,
+            value: category
+          }
+        })
+      }
       return res.status(200).json({ success: true })
 
     } catch (error) {
@@ -175,7 +231,8 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
 
 export const editOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { orderId, name, description, price, location, tags, picture } = req.body;
+  const { orderId, name, description, price, location, tags, picture, category } = req.body;
+
   if (user.userType === UserType.VENDER) {
 
     try {
@@ -186,6 +243,7 @@ export const editOrder = async (req: Request, res: Response, next: NextFunction)
           where: { id: existingOrder.id },
           data: {
             name: name,
+            category: category,
             description: description,
             price: price,
             location: location,
@@ -193,7 +251,18 @@ export const editOrder = async (req: Request, res: Response, next: NextFunction)
             Tag: tags
           }
         })
-       
+        const singleCategory = await prisma.category.findFirst({ where: { label: existingOrder.category } })
+        
+        if (singleCategory) {
+
+          await prisma.category.update({
+            where: { id: singleCategory.id },
+            data: {
+              label: category,
+              value: category
+            }
+          })
+        }
         return res.status(200).json({ message: "Order has been upadted" })
       } else {
         return res.status(404).json({ message: "Order not found" })
@@ -434,6 +503,25 @@ export const getOrderFavorite = async (req: Request, res: Response, next: NextFu
     if (singleUserFavoriteOrder.length) {
       return res.status(200).json(singleUserFavoriteOrder);
     }
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+}
+
+
+export const getCategory = async (req: Request, res: Response, next: NextFunction) => {
+
+  const userId = (req as any).user.id
+  if (!userId)
+    return res
+      .status(400)
+      .json({ error: 'Request should have userId' });
+
+  try {
+
+    const category = await prisma.category.findMany()
+   
+      return res.status(200).json(category);
   } catch (error) {
     return res.status(500).json(error);
   }

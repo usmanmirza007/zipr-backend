@@ -17,6 +17,7 @@ userRouter.route('/follow').post(jwt(secret_key), controller.orderFollow);
 userRouter.route('/follow').get(jwt(secret_key), controller.getOrderFollow);
 userRouter.route('/favorite').post(jwt(secret_key), controller.orderFavorite);
 userRouter.route('/favorite').get(jwt(secret_key), controller.getOrderFavorite);
+userRouter.route('/category').get(jwt(secret_key), controller.getCategory);
 userRouter.route('/order/:orderId').get(jwt(secret_key), controller.getSingleOrder);
 
 

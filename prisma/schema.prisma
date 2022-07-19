@@ -23,12 +23,12 @@ model Customer {
 }
 
 model Vender {
-  id         Int      @id @default(autoincrement())
-  bio        String?
-  location   String?
-  isActive   Boolean  @default(false)
-  Order      Order[]
-  User       User[]
+  id       Int     @id @default(autoincrement())
+  bio      String?
+  location String?
+  isActive Boolean @default(false)
+  Order    Order[]
+  User     User[]
 }
 
 model User {
@@ -52,11 +52,18 @@ model Order {
   name          String
   description   String
   price         Float
-  picture       String
+  picture       Json
   location      String
   Tag           Json
+  category      String          @default("")
   FollowOrder   FollowOrder[]
   FavoriteOrder FavoriteOrder[]
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  label String
+  value String
 }
 
 model FollowOrder {
