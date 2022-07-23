@@ -9,15 +9,15 @@ export const userRouter = express.Router();
 userRouter.route('/').get(jwt(secret_key), controller.getUsers);
 userRouter.route('/edit').patch(jwt(secret_key), controller.editUser);
 userRouter.route('/status').patch(jwt(secret_key), controller.changeUserStatus);
-userRouter.route('/order').post(jwt(secret_key), controller.addOrder);
-userRouter.route('/order').get(jwt(secret_key), controller.getUserOrders);
-userRouter.route('/order').patch(jwt(secret_key), controller.editOrder);
-userRouter.route('/allOrder').get(jwt(secret_key), controller.getAllOrders);
-userRouter.route('/follow').post(jwt(secret_key), controller.orderFollow);
-userRouter.route('/follow').get(jwt(secret_key), controller.getOrderFollow);
-userRouter.route('/favorite').post(jwt(secret_key), controller.orderFavorite);
-userRouter.route('/favorite').get(jwt(secret_key), controller.getOrderFavorite);
+userRouter.route('/product').post(jwt(secret_key), controller.addProduct);
+userRouter.route('/product').get(jwt(secret_key), controller.getUserProduct);
+userRouter.route('/product').patch(jwt(secret_key), controller.editProduct);
+userRouter.route('/allProduct').get(jwt(secret_key), controller.getAllProduct);
+userRouter.route('/follow').post(jwt(secret_key), controller.followPRoduct);
+userRouter.route('/follow').get(jwt(secret_key), controller.getFollowProduct);
+userRouter.route('/favorite').post(jwt(secret_key), controller.favoriteProduct);
+userRouter.route('/favorite').get(jwt(secret_key), controller.getFavoriteProduct);
 userRouter.route('/category').get(jwt(secret_key), controller.getCategory);
-userRouter.route('/order/:orderId').get(jwt(secret_key), controller.getSingleOrder);
+userRouter.route('/product/:productId').get(jwt(secret_key), controller.getSingleProduct);
 
 

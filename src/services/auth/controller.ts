@@ -67,7 +67,7 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
       } catch (error) {
         console.log('error', error);
         
-        return res.status(500).json({ message: 'something went wrong' })
+        return res.status(500).json({ message: 'Something went wrong' })
       }
     }
   }
@@ -134,7 +134,7 @@ export const vendorSignup = async (req: Request, res: Response, next: NextFuncti
       } catch (error) {
         console.log('err', error);
         
-        return res.status(500).json({ message: 'something went wrong' })
+        return res.status(500).json({ message: 'Something went wrong' })
       }
     }
   }
@@ -170,7 +170,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           return res.status(200).json({ token: data, type: UserType.CUSTOMER })
 
         } catch (error) {
-          return res.status(500).json({ message: 'something went wrong' })
+          return res.status(500).json({ message: 'Something went wrong' })
         }
       } else {
         return res.status(401).json({ message: 'Incorrect credentials' })
@@ -194,7 +194,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           });
           return res.status(200).json({ token: data, type: UserType.VENDER })
         } catch (error) {
-          return res.status(500).json({ message: 'something went wrong' })
+          return res.status(500).json({ message: 'Something went wrong' })
         }
       } else {
         return res.status(401).json({ message: 'Incorrect credentials' })

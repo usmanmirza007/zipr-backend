@@ -14,21 +14,21 @@ enum UserType {
 }
 
 model Customer {
-  id            Int             @id @default(autoincrement())
-  isActive      Boolean         @default(false)
-  FollowOrder   FollowOrder[]
-  FavoriteOrder FavoriteOrder[]
-  CheckoutOrder CheckoutOrder[]
-  User          User[]
+  id              Int               @id @default(autoincrement())
+  isActive        Boolean           @default(false)
+  CheckoutOrder   CheckoutOrder[]
+  User            User[]
+  FollowProduct   FollowProduct[]
+  FavoriteProduct FavoriteProduct[]
 }
 
 model Vender {
-  id       Int     @id @default(autoincrement())
+  id       Int       @id @default(autoincrement())
   bio      String?
   location String?
-  isActive Boolean @default(false)
-  Order    Order[]
+  isActive Boolean   @default(false)
   User     User[]
+  Product  Product[]
 }
 
 model User {
@@ -45,19 +45,20 @@ model User {
   customerId Int
 }
 
-model Order {
-  id            Int             @id @default(autoincrement())
-  vender        Vender          @relation(fields: [venderId], references: [id], onDelete: Cascade)
-  venderId      Int
-  name          String
-  description   String
-  price         Float
-  picture       Json
-  location      String
-  Tag           Json
-  category      String          @default("")
-  FollowOrder   FollowOrder[]
-  FavoriteOrder FavoriteOrder[]
+model Product {
+  id              Int               @id @default(autoincrement())
+  vender          Vender            @relation(fields: [venderId], references: [id], onDelete: Cascade)
+  venderId        Int
+  name            String
+  description     String
+  price           Float
+  picture         Json
+  location        String
+  tag             Json
+  category        String            @default("")
+  rating          Int               @default(0)
+  FollowProduct   FollowProduct[]
+  FavoriteProduct FavoriteProduct[]
 }
 
 model Category {
@@ -66,24 +67,24 @@ model Category {
   value String
 }
 
-model FollowOrder {
-  id      Int      @id @default(autoincrement())
-  user    Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId  Int
-  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId Int
+model FollowProduct {
+  id        Int      @id @default(autoincrement())
+  user      Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
 
-  @@unique([userId, orderId], name: "unique_following_user")
+  @@unique([userId, productId], name: "unique_following_products")
 }
 
-model FavoriteOrder {
-  id      Int      @id @default(autoincrement())
-  user    Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId  Int
-  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId Int
+model FavoriteProduct {
+  id        Int      @id @default(autoincrement())
+  user      Customer @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
 
-  @@unique([userId, orderId], name: "unique_favorite_order")
+  @@unique([userId, productId], name: "unique_favorite_products")
 }
 
 model CheckoutOrder {

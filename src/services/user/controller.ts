@@ -44,7 +44,7 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
           return res.status(200).json({ success: true })
         } catch (error) {
           console.log('err', error);
-          return res.status(500).json({ message: 'something went wrong' })
+          return res.status(500).json({ message: 'Something went wrong' })
         }
 
       } else {
@@ -88,7 +88,7 @@ export const changeUserStatus = async (req: Request, res: Response, next: NextFu
           return res.status(200).json({ token: data, type: type })
         } catch (error) {
           console.log('err', error);
-          return res.status(500).json({ message: 'something went wrong' })
+          return res.status(500).json({ message: 'Something went wrong' })
         }
 
       } else {
@@ -116,7 +116,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       }
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   } else {
 
@@ -131,70 +131,21 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
       }
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   }
 
 };
 
-export const addOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const addProduct = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
   const { name, description, price, location, tags, pictures, category } = req.body;
 
-  const categories = [
-    { label: "All", value: "All" },
-    { label: "Books", value: "Books" },
-    { label: "Clothing", value: "Clothing" },
-    { label: "Fashion", value: "Fashion" },
-    { label: "Wearable Accessories", value: "Wearable Accessories" },
-    { label: "Stationery", value: "Stationery" },
-    { label: "Office Supplies", value: "Office Supplies" },
-    { label: "Beauty & Personal Care", value: "Beauty & Personal Care" },
-    { label: "Furniture", value: "Furniture" },
-    { label: "Home & Appliances", value: "Home & Appliances" },
-    { label: "Tools & Home Improvements", value: "Tools & Home Improvements" },
-    { label: "Automotive", value: "Automotive" },
-    { label: "Exercise & Fitness", value: "Exercise & Fitness" },
-    { label: "Sports", value: "Sports" },
-    { label: "Electronics", value: "Electronics" },
-    { label: "Personal Computers", value: "Personal Computers" },
-    { label: "Tech Accessories", value: "Tech Accessories" },
-    { label: "ICT", value: "ICT" },
-    { label: "Health and Hygiene", value: "Health and Hygiene" },
-    { label: "Industrial & Scientific", value: "Industrial & Scientific" },
-    { label: "Academics", value: "Academics" },
-    { label: "Academic Services", value: "Academic Services" },
-    { label: "Education", value: "Education" },
-    { label: "Cuisine", value: "Cuisine" },
-    { label: "Grocery & Food", value: "Grocery & Food" },
-    { label: "Arts & Crafts", value: "Arts & Crafts" },
-    { label: "Creative Art", value: "Creative Art" },
-    { label: "Entertainment", value: "Entertainment" },
-    { label: "Social", value: "Social" },
-    { label: "Equipment", value: "Equipment" },
-    { label: "DIY", value: "DIY" },
-    { label: "DIY Services", value: "DIY Services" },
-    { label: "Camera & Photo", value: "Camera & Photo" },
-    { label: "Music & Video", value: "Music & Video" },
-    { label: "Outdoors", value: "Outdoors" },
-    { label: "Software", value: "Software" },
-    { label: "Video Games", value: "Video Games" },
-    { label: "Musical Instruments", value: "Musical Instruments" },
-    { label: "Financial Services", value: "Financial Services" },
-    { label: "Party Supplies", value: "Party Supplies" },
-    { label: "Convenience Suppies", value: "Convenience Suppies" },
-    { label: "Other", value: "Other" }
-  ]
-
-  // for (const cate of categories) {
-  //   await prisma.category.create({data: {label: cate.label, value: cate.value}})
-    
-  // }
   if (user.userType === UserType.VENDER ) {
 
     try {
         
-        const order = await prisma.order.create({
+        const order = await prisma.product.create({
           data: {
             name: name,
             description: description,
@@ -202,7 +153,7 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
             location: location,
             picture: pictures,
             venderId: parseInt(user.id),
-            Tag: tags,
+            tag: tags,
             category: category,
           }
         })
@@ -220,7 +171,7 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
 
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   } else {
     return res.status(404).json({ message: 'User not found please login first' })
@@ -229,18 +180,18 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
 
 };
 
-export const editOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const editProduct = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { orderId, name, description, price, location, tags, picture, category } = req.body;
+  const { productId, name, description, price, location, tags, picture, category } = req.body;
 
   if (user.userType === UserType.VENDER) {
 
     try {
-      const existingOrder = await prisma.order.findUnique({ where: { id: parseInt(orderId) } })
+      const existingProduct = await prisma.product.findUnique({ where: { id: parseInt(productId) } })
 
-      if (existingOrder) {
-        await prisma.order.update({
-          where: { id: existingOrder.id },
+      if (existingProduct) {
+        await prisma.product.update({
+          where: { id: existingProduct.id },
           data: {
             name: name,
             category: category,
@@ -248,10 +199,10 @@ export const editOrder = async (req: Request, res: Response, next: NextFunction)
             price: price,
             location: location,
             picture: picture,
-            Tag: tags
+            tag: tags
           }
         })
-        const singleCategory = await prisma.category.findFirst({ where: { label: existingOrder.category } })
+        const singleCategory = await prisma.category.findFirst({ where: { label: existingProduct.category } })
         
         if (singleCategory) {
 
@@ -270,106 +221,108 @@ export const editOrder = async (req: Request, res: Response, next: NextFunction)
 
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   } else {
     return res.status(404).json({ message: 'User not found please login first' })
   }
 };
 
-export const getUserOrders = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserProduct = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
 
   if (user.userType === UserType.VENDER) {
 
     try {
-      const order = await prisma.order.findMany({ where: {venderId: parseInt(user.id)}})
+      const products = await prisma.product.findMany({ where: {venderId: parseInt(user.id)}})
 
-      return res.status(200).json(order)
+      return res.status(200).json(products)
 
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   }
 
 };
 
-export const getSingleOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const getSingleProduct = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { orderId } = req.params
+  const { productId } = req.params
+  console.log('error', productId);
   
   if (user.userType === UserType.VENDER) {
 
     try {
-      const order = await prisma.order.findUnique({ where: {id: parseInt(orderId)}})
+      const products = await prisma.product.findUnique({ where: {id: parseInt(productId)}})
 
-      return res.status(200).json(order)
+      return res.status(200).json(products)
 
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   }
 
 };
 
-export const getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllProduct = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
 
   if (user.userType === UserType.CUSTOMER) {
 
     try {
-      const order = await prisma.order.findMany()
-
-      return res.status(200).json(order)
+      const products = await prisma.product.findMany({include: {vender: {include: {User: true}}}})
+      console.log('fofo', products);
+      
+      return res.status(200).json(products)
 
     } catch (error) {
       console.log('err', error);
-      return res.status(500).json({ message: 'something went wrong' })
+      return res.status(500).json({ message: 'Something went wrong' })
     }
   }
 
 };
 
 
-export const orderFollow = async (req: Request, res: Response, next: NextFunction) => {
+export const followPRoduct = async (req: Request, res: Response, next: NextFunction) => {
 
   const userId = (req as any).user.id
-  const { orderId, follow } = req.body
-  if (!orderId)
+  const { productId, follow } = req.body
+  if (!productId)
     return res
       .status(400)
-      .json({ error: 'Request should have orderId' });
+      .json({ error: 'Request should have productId' });
 
   try {
 
     if (follow) {
 
-      const userFollowing = await prisma.followOrder.upsert({
+      const userFollowing = await prisma.followProduct.upsert({
         where: {
-          unique_following_user: {
+          unique_following_products: {
             userId: userId,
-            orderId: orderId
+            productId: productId
           }
         },
         create: {
           userId: userId,
-          orderId: orderId
+          productId: productId
         },
         update: {
           userId: userId,
-          orderId: orderId
+          productId: productId
         },
       })
 
     } else {
 
-      const userFollowing = await prisma.followOrder.delete({
+      const userFollowing = await prisma.followProduct.delete({
         where: {
-          unique_following_user: {
+          unique_following_products: {
             userId: userId,
-            orderId: orderId
+            productId: productId
           }
         }
       })
@@ -383,7 +336,7 @@ export const orderFollow = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
-export const getOrderFollow = async (req: Request, res: Response, next: NextFunction) => {
+export const getFollowProduct = async (req: Request, res: Response, next: NextFunction) => {
 
   const userId = (req as any).user.id
   if (!userId)
@@ -393,70 +346,70 @@ export const getOrderFollow = async (req: Request, res: Response, next: NextFunc
 
   try {
 
-    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FollowOrder: true } })
+    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FollowProduct: true } })
     const orderCondition: Array<{ orderId: number }> = []
 
     if (user) {
-      for (const order of user.FollowOrder) {
-        orderCondition.push({ orderId: order.id })
+      for (const prodcut of user.FollowProduct) {
+        orderCondition.push({ orderId: prodcut.id })
       }
     }
 
-    const FollowingOrder = await prisma.followOrder.findMany({
-      include: { order: true }
+    const FollowingProduct = await prisma.followProduct.findMany({
+      include: { product: true }
     })
-    var singleUserOrder: Array<any> = []
-    const follow = FollowingOrder.map((value) => {
+    var singleUserProduct: Array<any> = []
+    const follow = FollowingProduct.map((value) => {
       if (value.userId == userId) {
-        singleUserOrder.push(value.order)
+        singleUserProduct.push(value.product)
       }
     })
 
-    if (singleUserOrder.length) {
-      return res.status(200).json(singleUserOrder);
+    if (singleUserProduct.length) {
+      return res.status(200).json(singleUserProduct);
     }
   } catch (error) {
     return res.status(500).json(error);
   }
 }
 
-export const orderFavorite = async (req: Request, res: Response, next: NextFunction) => {
+export const favoriteProduct = async (req: Request, res: Response, next: NextFunction) => {
 
   const userId = (req as any).user.id
-  const { orderId, favorite } = req.body
-  if (!orderId)
+  const { productId, favorite } = req.body
+  if (!productId)
     return res
       .status(400)
-      .json({ error: 'Request should have orderId' });
+      .json({ error: 'Request should have productId' });
 
   try {
 
     if (favorite) {
 
-      await prisma.favoriteOrder.upsert({
+      await prisma.favoriteProduct.upsert({
         where: {
-          unique_favorite_order: {
+          unique_favorite_products: {
             userId: userId,
-            orderId: orderId
+            productId: productId
           }
         },
         create: {
           userId: userId,
-          orderId: orderId
+          productId: productId
         },
         update: {
           userId: userId,
-          orderId: orderId
+          productId: productId
         },
       })
 
     } else {
 
-      await prisma.favoriteOrder.delete({
+      await prisma.favoriteProduct.delete({
         where: {
-          unique_favorite_order: {
+          unique_favorite_products: {
             userId: userId,
-            orderId: orderId
+            productId: productId
           }
         }
       })
@@ -471,7 +424,7 @@ export const orderFavorite = async (req: Request, res: Response, next: NextFunct
 }
 
 
-export const getOrderFavorite = async (req: Request, res: Response, next: NextFunction) => {
+export const getFavoriteProduct = async (req: Request, res: Response, next: NextFunction) => {
 
   const userId = (req as any).user.id
   if (!userId)
@@ -481,27 +434,27 @@ export const getOrderFavorite = async (req: Request, res: Response, next: NextFu
 
   try {
 
-    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FavoriteOrder: true } })
+    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FavoriteProduct: true } })
     const orderCondition: Array<{ orderId: number }> = []
 
     if (user) {
-      for (const order of user.FavoriteOrder) {
-        orderCondition.push({ orderId: order.id })
+      for (const prodcut of user.FavoriteProduct) {
+        orderCondition.push({ orderId: prodcut.id })
       }
     }
 
-    const favoriteOrder = await prisma.favoriteOrder.findMany({
-      include: { order: true }
+    const favoriteOrder = await prisma.favoriteProduct.findMany({
+      include: { product: true }
     })
-    var singleUserFavoriteOrder: Array<any> = []
+    var singleUserFavoriteProduct: Array<any> = []
     favoriteOrder.map((value) => {
       if (value.userId == userId) {
-        singleUserFavoriteOrder.push(value.order)
+        singleUserFavoriteProduct.push(value.product)
       }
     })
 
-    if (singleUserFavoriteOrder.length) {
-      return res.status(200).json(singleUserFavoriteOrder);
+    if (singleUserFavoriteProduct.length) {
+      return res.status(200).json(singleUserFavoriteProduct);
     }
   } catch (error) {
     return res.status(500).json(error);
@@ -518,10 +471,59 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
       .json({ error: 'Request should have userId' });
 
   try {
-
+    const categories = [
+      { label: "All", value: "All" },
+      { label: "Books", value: "Books" },
+      { label: "Clothing", value: "Clothing" },
+      { label: "Fashion", value: "Fashion" },
+      { label: "Wearable Accessories", value: "Wearable Accessories" },
+      { label: "Stationery", value: "Stationery" },
+      { label: "Office Supplies", value: "Office Supplies" },
+      { label: "Beauty & Personal Care", value: "Beauty & Personal Care" },
+      { label: "Furniture", value: "Furniture" },
+      { label: "Home & Appliances", value: "Home & Appliances" },
+      { label: "Tools & Home Improvements", value: "Tools & Home Improvements" },
+      { label: "Automotive", value: "Automotive" },
+      { label: "Exercise & Fitness", value: "Exercise & Fitness" },
+      { label: "Sports", value: "Sports" },
+      { label: "Electronics", value: "Electronics" },
+      { label: "Personal Computers", value: "Personal Computers" },
+      { label: "Tech Accessories", value: "Tech Accessories" },
+      { label: "ICT", value: "ICT" },
+      { label: "Health and Hygiene", value: "Health and Hygiene" },
+      { label: "Industrial & Scientific", value: "Industrial & Scientific" },
+      { label: "Academics", value: "Academics" },
+      { label: "Academic Services", value: "Academic Services" },
+      { label: "Education", value: "Education" },
+      { label: "Cuisine", value: "Cuisine" },
+      { label: "Grocery & Food", value: "Grocery & Food" },
+      { label: "Arts & Crafts", value: "Arts & Crafts" },
+      { label: "Creative Art", value: "Creative Art" },
+      { label: "Entertainment", value: "Entertainment" },
+      { label: "Social", value: "Social" },
+      { label: "Equipment", value: "Equipment" },
+      { label: "DIY", value: "DIY" },
+      { label: "DIY Services", value: "DIY Services" },
+      { label: "Camera & Photo", value: "Camera & Photo" },
+      { label: "Music & Video", value: "Music & Video" },
+      { label: "Outdoors", value: "Outdoors" },
+      { label: "Software", value: "Software" },
+      { label: "Video Games", value: "Video Games" },
+      { label: "Musical Instruments", value: "Musical Instruments" },
+      { label: "Financial Services", value: "Financial Services" },
+      { label: "Party Supplies", value: "Party Supplies" },
+      { label: "Convenience Suppies", value: "Convenience Suppies" },
+      { label: "Other", value: "Other" }
+    ]
+  
+    // for (const cate of categories) {
+    //   await prisma.category.create({data: {label: cate.label, value: cate.value}})
+      
+    // }
     const category = await prisma.category.findMany()
-   
-      return res.status(200).json(category);
+    console.log('error: category not found', category);
+    
+    return res.status(200).json(category);
   } catch (error) {
     return res.status(500).json(error);
   }
