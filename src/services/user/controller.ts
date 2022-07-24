@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { PrismaClient, UserType } from '@prisma/client';
+import { OrderStatus, PrismaClient, UserType } from '@prisma/client';
 import { secret_key } from '../../../secret';
 const jwt = require('jsonwebtoken')
 
@@ -273,7 +273,6 @@ export const getAllProduct = async (req: Request, res: Response, next: NextFunct
 
     try {
       const products = await prisma.product.findMany({include: {vender: {include: {User: true}}}})
-      console.log('fofo', products);
       
       return res.status(200).json(products)
 
@@ -521,10 +520,89 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
       
     // }
     const category = await prisma.category.findMany()
-    console.log('error: category not found', category);
     
     return res.status(200).json(category);
   } catch (error) {
     return res.status(500).json(error);
   }
 }
+
+export const addOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+  const { name, description, price, pictures, orderStatus, quantity } = req.body;
+
+  let status: OrderStatus = orderStatus
+
+  if (orderStatus === OrderStatus.PENDING) {
+    status = OrderStatus.PENDING;
+  } 
+
+  if (user.userType === UserType.CUSTOMER) {
+
+    try {
+        
+        const order = await prisma.order.create({
+          data: {
+            name: name,
+            description: description,
+            price: parseFloat(price),
+            picture: pictures,
+            customerId: parseInt(user.id),
+            quantity: quantity,
+            status: status
+          }
+        })
+       
+      return res.status(200).json({ success: true })
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'Something went wrong' })
+    }
+  } else {
+    return res.status(404).json({ message: 'User not found please login first' })
+
+  }
+
+};
+
+export const getOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+
+  if (user.userType === UserType.CUSTOMER) {
+
+    try {
+
+      const order = await prisma.order.findMany({ where: { customerId: parseInt(user.id) } })
+      return res.status(200).json(order)
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'Something went wrong' })
+    }
+  } else {
+    return res.status(404).json({ message: 'User not found please login first' })
+
+  }
+
+};
+
+
+export const deleteOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+  const { orderId } = req.params
+  
+  if (user.userType === UserType.CUSTOMER) {
+
+    try {
+
+      await prisma.order.delete({ where: {id: parseInt(orderId)}})
+      return res.status(200).json({ success: true})
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'Something went wrong' })
+    }
+  }
+
+};

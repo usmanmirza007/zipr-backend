@@ -18,6 +18,9 @@ userRouter.route('/follow').get(jwt(secret_key), controller.getFollowProduct);
 userRouter.route('/favorite').post(jwt(secret_key), controller.favoriteProduct);
 userRouter.route('/favorite').get(jwt(secret_key), controller.getFavoriteProduct);
 userRouter.route('/category').get(jwt(secret_key), controller.getCategory);
+userRouter.route('/order').post(jwt(secret_key), controller.addOrder);
+userRouter.route('/order').get(jwt(secret_key), controller.getOrder);
+userRouter.route('/order/:orderId').delete(jwt(secret_key), controller.deleteOrder);
 userRouter.route('/product/:productId').get(jwt(secret_key), controller.getSingleProduct);
 
 
