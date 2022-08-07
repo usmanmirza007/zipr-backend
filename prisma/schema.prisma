@@ -5,7 +5,8 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = "mysql://dev:Skillware4u@161.97.71.218:3306/zipr"
+  // url      = env("DATABASE_URL")
 }
 
 enum UserType {
