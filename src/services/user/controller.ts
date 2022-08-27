@@ -9,102 +9,102 @@ const prisma = new PrismaClient();
 export const editUser = async (req: Request, res: Response, next: NextFunction) => {
   const { firstName, lastName, vendorName, picture, bio, location, type } = req.body;
   const user = (req as any).user
-    
-    // Edit customer user
-    if (firstName || lastName || picture || bio || location ) {
-      const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
-      if (exsitingUser) {
 
-        try {
-          if (UserType.CUSTOMER == user.userType) {
-            await prisma.user.update({
-              where: {
-                id: exsitingUser.id,
-              },
-              data: {
-                firstName: firstName,
-                lastName: lastName,
-                picture: picture,
-              }
-            })
-          } else {
-            await prisma.user.update({
-              where: {
-                id: exsitingUser.id,
-              },
-              data: {
-                firstName: firstName,
-                lastName: lastName,
-                picture: picture,
-                vender: { update: { bio: bio, location: location } }
-              }
-            })
-          }
-         
-          return res.status(200).json({ success: true })
-        } catch (error) {
-          console.log('err', error);
-          return res.status(500).json({ message: 'Something went wrong' })
+  // Edit customer user
+  if (firstName || lastName || picture || bio || location) {
+    const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
+    if (exsitingUser) {
+
+      try {
+        if (UserType.CUSTOMER == user.userType) {
+          await prisma.user.update({
+            where: {
+              id: exsitingUser.id,
+            },
+            data: {
+              firstName: firstName,
+              lastName: lastName,
+              picture: picture,
+            }
+          })
+        } else {
+          await prisma.user.update({
+            where: {
+              id: exsitingUser.id,
+            },
+            data: {
+              firstName: firstName,
+              lastName: lastName,
+              picture: picture,
+              vender: { update: { bio: bio, location: location } }
+            }
+          })
         }
 
-      } else {
-        return res.status(404).json({ message: 'User not found' })
+        return res.status(200).json({ success: true })
+      } catch (error) {
+        console.log('err', error);
+        return res.status(500).json({ message: 'Something went wrong' })
       }
 
     } else {
-      return res.status(400).send({ message: 'Incomplete parameter' });
+      return res.status(404).json({ message: 'User not found' })
     }
- 
+
+  } else {
+    return res.status(400).send({ message: 'Incomplete parameter' });
+  }
+
 }
 
 
 export const changeUserStatus = async (req: Request, res: Response, next: NextFunction) => {
   const { type } = req.body;
   const user = (req as any).user
-    
-    if ( type ) {
-      const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
-      if (exsitingUser) {
 
-        try {
-          const user = await prisma.user.update({
-            where: {
-              id: exsitingUser.id,
-            },
-            data: {
-              userType: type,
-              vender: {update: {isActive: type === UserType.VENDER ? true : false }},
-              customer: {update: {isActive: type === UserType.CUSTOMER ? true : false }}
-            }
-          })
-          const data = await jwt.sign({
-            username: exsitingUser.email,
-            userType: type,
+  if (type) {
+    const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
+    if (exsitingUser) {
+
+      try {
+        const user = await prisma.user.update({
+          where: {
             id: exsitingUser.id,
-          }, secret_key.secret, {
-            expiresIn: '4h',
-            algorithm: secret_key.algorithms[0]
-          });
-          return res.status(200).json({ token: data, type: type })
-        } catch (error) {
-          console.log('err', error);
-          return res.status(500).json({ message: 'Something went wrong' })
-        }
-
-      } else {
-        return res.status(404).json({ message: 'User not found' })
+          },
+          data: {
+            userType: type,
+            vender: { update: { isActive: type === UserType.VENDER ? true : false } },
+            customer: { update: { isActive: type === UserType.CUSTOMER ? true : false } }
+          }
+        })
+        const data = await jwt.sign({
+          username: exsitingUser.email,
+          userType: type,
+          id: exsitingUser.id,
+        }, secret_key.secret, {
+          expiresIn: '4h',
+          algorithm: secret_key.algorithms[0]
+        });
+        return res.status(200).json({ token: data, type: type })
+      } catch (error) {
+        console.log('err', error);
+        return res.status(500).json({ message: 'Something went wrong' })
       }
 
     } else {
-      return res.status(400).send({ message: 'Incomplete parameter' });
+      return res.status(404).json({ message: 'User not found' })
     }
+
+  } else {
+    return res.status(400).send({ message: 'Incomplete parameter' });
+  }
 }
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  
+
   if (user.userType != UserType.CUSTOMER) {
-    
+
     try {
       const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: { vender: true } })
 
@@ -121,7 +121,7 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
   } else {
 
     try {
-      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: {customer: true} })
+      const getUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) }, include: { customer: true } })
 
       if (getUser) {
         return res.status(200).json(getUser)
@@ -141,23 +141,23 @@ export const addProduct = async (req: Request, res: Response, next: NextFunction
   const user = (req as any).user
   const { name, description, price, location, tags, pictures, category } = req.body;
 
-  if (user.userType === UserType.VENDER ) {
+  if (user.userType === UserType.VENDER) {
 
     try {
-        
-        const order = await prisma.product.create({
-          data: {
-            name: name,
-            description: description,
-            price: parseFloat(price),
-            location: location,
-            picture: pictures,
-            venderId: parseInt(user.id),
-            tag: tags,
-            category: category,
-          }
-        })
-       
+
+      const order = await prisma.product.create({
+        data: {
+          name: name,
+          description: description,
+          price: parseFloat(price),
+          location: location,
+          picture: pictures,
+          venderId: parseInt(user.id),
+          tag: tags,
+          category: category,
+        }
+      })
+
       const exsitingCategory = (await prisma.category.findMany()).find((val) => val.label === category)
       if (!exsitingCategory) {
         await prisma.category.create({
@@ -196,14 +196,14 @@ export const editProduct = async (req: Request, res: Response, next: NextFunctio
             name: name,
             category: category,
             description: description,
-            price: price,
+            price: parseFloat(price),
             location: location,
             picture: picture,
             tag: tags
           }
         })
         const singleCategory = await prisma.category.findFirst({ where: { label: existingProduct.category } })
-        
+
         if (singleCategory) {
 
           await prisma.category.update({
@@ -234,7 +234,7 @@ export const getUserProduct = async (req: Request, res: Response, next: NextFunc
   if (user.userType === UserType.VENDER) {
 
     try {
-      const products = await prisma.product.findMany({ where: {venderId: parseInt(user.id)}})
+      const products = await prisma.product.findMany({ where: { venderId: parseInt(user.id) } })
 
       return res.status(200).json(products)
 
@@ -249,12 +249,11 @@ export const getUserProduct = async (req: Request, res: Response, next: NextFunc
 export const getSingleProduct = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
   const { productId } = req.params
-  console.log('error', productId);
-  
+
   if (user.userType === UserType.VENDER) {
 
     try {
-      const products = await prisma.product.findUnique({ where: {id: parseInt(productId)}})
+      const products = await prisma.product.findUnique({ where: { id: parseInt(productId) } })
 
       return res.status(200).json(products)
 
@@ -272,8 +271,8 @@ export const getAllProduct = async (req: Request, res: Response, next: NextFunct
   if (user.userType === UserType.CUSTOMER) {
 
     try {
-      const products = await prisma.product.findMany({include: {vender: {include: {User: true}}}})
-      
+      const products = await prisma.product.findMany({ include: { vender: { include: { User: true } } } })
+
       return res.status(200).json(products)
 
     } catch (error) {
@@ -529,31 +528,65 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
 
 export const addOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { name, description, price, pictures, orderStatus, quantity } = req.body;
+  const { orderId, productId, price, quantity, orderStatus } = req.body;
 
   let status: OrderStatus = orderStatus
 
   if (orderStatus === OrderStatus.PENDING) {
     status = OrderStatus.PENDING;
-  } 
+  }
 
   if (user.userType === UserType.CUSTOMER) {
 
     try {
-        
+
+      if (orderId) {
+
+        const getOrderItem = await prisma.orderItem.findMany({ where: { orderId: parseInt(orderId) }, include: { product: true } })
+        let totalPrice = price
+        for (const item of getOrderItem) {
+
+          totalPrice += item.product.price
+        }
+
+        const orderItem = await prisma.orderItem.create({
+          data: {
+            orderId: orderId,
+            productId: productId,
+            quantity: quantity,
+          }
+        })
+        const order = await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            price: totalPrice,
+          }
+        })
+
+        return res.status(200).json(order)
+
+      } else {
         const order = await prisma.order.create({
           data: {
-            name: name,
-            description: description,
             price: parseFloat(price),
-            picture: pictures,
             customerId: parseInt(user.id),
-            quantity: quantity,
+            shipingPrice: 0,
+            totalPrice: 0,
             status: status
           }
         })
-       
-      return res.status(200).json({ success: true })
+
+        const orderItem = await prisma.orderItem.create({
+          data: {
+            orderId: order.id,
+            productId: productId,
+            quantity: quantity,
+
+          },
+
+        })
+        return res.status(200).json(order)
+      }
 
     } catch (error) {
       console.log('err', error);
@@ -573,8 +606,16 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
 
     try {
 
-      const order = await prisma.order.findMany({ where: { customerId: parseInt(user.id) } })
-      return res.status(200).json(order)
+      const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
+
+      let orderData: Array<any> = []
+      for (const order of orders) {
+        for (const item of order.OrderItem) {
+          orderData.push({...item.product, orderId: order.id, orderItemId: item.id, quantity: item.quantity, totalPrice: order.price, status: order.status})
+        }
+      }
+
+      return res.status(200).json(orderData)
 
     } catch (error) {
       console.log('err', error);
@@ -587,17 +628,58 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
 
 };
 
-
-export const deleteOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { orderId } = req.params
+
+    try {
+
+      const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
+
+      let orderData: Array<any> = []
+      for (const order of orders) {
+        for (const item of order.OrderItem) {
+          if (order.id === item.orderId) {
+            orderData.push({orderId: item.orderId, picture: item.product.picture})
+          }
+        }
+      }
+      let pictures: Array<any> = []
+
+      for (const order of orders) {
+        for (const data of orderData) {
+          if (data.orderId === order.id) {
+            for (const picture of data.picture) {
+              pictures.push({picture: picture});
+            }
+          }
+        }
+      }
+      
+      return res.status(200).json({orders, pictures });
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'Something went wrong' })
+    }
+
+};
+
+
+export const deleteOrderItem = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+  const { itemId } = req.params
   
   if (user.userType === UserType.CUSTOMER) {
 
     try {
 
-      await prisma.order.delete({ where: {id: parseInt(orderId)}})
-      return res.status(200).json({ success: true})
+      const orderItem = await prisma.orderItem.delete({ where: { id: parseInt(itemId) } })
+
+      const orderItems = await prisma.orderItem.findMany({ where: { orderId: orderItem.orderId } })
+      if (!orderItems.length) {
+        const order = await prisma.order.delete({ where: { id: orderItem.orderId } })
+      }
+      return res.status(200).json({ success: true })
 
     } catch (error) {
       console.log('err', error);

@@ -17,7 +17,6 @@ enum UserType {
 model Customer {
   id              Int               @id @default(autoincrement())
   isActive        Boolean           @default(false)
-  CheckoutOrder   CheckoutOrder[]
   User            User[]
   FollowProduct   FollowProduct[]
   FavoriteProduct FavoriteProduct[]
@@ -61,6 +60,7 @@ model Product {
   rating          Int               @default(0)
   FollowProduct   FollowProduct[]
   FavoriteProduct FavoriteProduct[]
+  OrderItem       OrderItem[]
 }
 
 model Category {
@@ -90,36 +90,30 @@ model FavoriteProduct {
 }
 
 enum OrderStatus {
-  PENDING
-  DISPATCH
-  ACCEPT
-  COMPLETED
+  PENDING              // when the order is add in checkout
+  CAPTUREED            // when the order is add payment  
+  PROOCESSING          // When the order is accepts
+  DISPATCHED           // when the order is given to delivery boy
+  DELIVERED            // when the order is get customer from delivery boy
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId  Int
-  name        String
-  description String
-  quantity    Int
-  price       Float
-  picture     Json
-  status      OrderStatus
+  id           Int         @id @default(autoincrement())
+  customer     Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId   Int
+  price        Float
+  shipingPrice Float
+  totalPrice   Float
+  createdAt    DateTime    @default(now())
+  status       OrderStatus
+  OrderItem    OrderItem[]
 }
 
-model CheckoutOrder {
-  id          Int      @id @default(autoincrement())
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId  Int
-  name        String
-  description String
-  price       Float
-  quantity    Int
-  venderName  String
-  venderBio   String
-  picture     String
-  location    String
-  status      String
-  Tag         Json
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  quantity  Int
 }
