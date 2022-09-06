@@ -12,11 +12,11 @@ export const addPayment = async (req: Request, res: Response, next: NextFunction
   const user = await prisma.user.findUnique({ where: { id: userId } })
 
   if (!user) {
-    return res.status(401).json({ error: "User not found please login again." })
+    return res.status(401).json({ message: "User not found please login again." })
   }
 
   if (!name || !cardNumber || !cvv || !expireDate || !price) {
-    return res.status(400).json({ error: "Request should be valid." })
+    return res.status(400).json({ message: "Request should be valid fields." })
   }
 
   try {
@@ -53,7 +53,7 @@ export const addPayment = async (req: Request, res: Response, next: NextFunction
     }
 
   } catch (error) {
-    return res.status(500).json(error)
+    return res.status(500).json({ error: "Some error occurred" })
 
   }
 

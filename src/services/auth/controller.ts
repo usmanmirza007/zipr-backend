@@ -17,7 +17,7 @@ export const customerSignup = async (req: Request, res: Response, next: NextFunc
   }
   if (!firstName || !lastName || !email || !password || !type) {
 
-    return res.status(400).send({ message: 'Incomplete parameter' });
+    return res.status(400).json({ message: 'Incomplete parameter' });
   } else {
 
     const exsitingUser = await prisma.user.findUnique({ where: { email: email } })
@@ -82,7 +82,7 @@ export const vendorSignup = async (req: Request, res: Response, next: NextFuncti
     usersType = UserType.VENDER
   }
   if (!firstName || !lastName || !email || !password || !type) {
-    return res.status(400).send({ message: 'Incomplete parameter' });
+    return res.status(400).json({ message: 'Incomplete parameter' });
   } else {
 
     const exsitingUser = await prisma.user.findUnique({ where: { email: email } })
@@ -145,7 +145,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).send({ message: 'Incomplete parameter' });
+    return res.status(400).json({ message: 'Incomplete parameter' });
   } else {
     const user = await prisma.user.findUnique({ where: { email: email }, include: {customer: true, vender: true} })
 

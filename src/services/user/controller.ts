@@ -2,20 +2,22 @@ import { NextFunction, Request, Response } from 'express';
 import { OrderStatus, PrismaClient, UserType } from '@prisma/client';
 import { secret_key } from '../../../secret';
 const jwt = require('jsonwebtoken')
+var bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
 
 export const editUser = async (req: Request, res: Response, next: NextFunction) => {
-  const { firstName, lastName, vendorName, picture, bio, location, type } = req.body;
+  const { firstName, lastName, picture, bio, location, type, password } = req.body;
   const user = (req as any).user
 
   // Edit customer user
-  if (firstName || lastName || picture || bio || location) {
+  if (firstName || lastName || picture || bio || location || password) {
     const exsitingUser = await prisma.user.findUnique({ where: { id: parseInt(user.id) } })
     if (exsitingUser) {
 
       try {
+        var hash = bcrypt.hashSync(password, 8);
         if (UserType.CUSTOMER == user.userType) {
           await prisma.user.update({
             where: {
@@ -25,6 +27,7 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
               firstName: firstName,
               lastName: lastName,
               picture: picture,
+              password: password ? hash : exsitingUser.password,
             }
           })
         } else {
@@ -36,6 +39,7 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
               firstName: firstName,
               lastName: lastName,
               picture: picture,
+              password: password ? hash : exsitingUser.password,
               vender: { update: { bio: bio, location: location } }
             }
           })
@@ -52,7 +56,7 @@ export const editUser = async (req: Request, res: Response, next: NextFunction) 
     }
 
   } else {
-    return res.status(400).send({ message: 'Incomplete parameter' });
+    return res.status(400).json({ message: 'Incomplete parameter' });
   }
 
 }
@@ -96,7 +100,7 @@ export const changeUserStatus = async (req: Request, res: Response, next: NextFu
     }
 
   } else {
-    return res.status(400).send({ message: 'Incomplete parameter' });
+    return res.status(400).json({ message: 'Incomplete parameter' });
   }
 }
 
@@ -271,7 +275,7 @@ export const getAllProduct = async (req: Request, res: Response, next: NextFunct
   if (user.userType === UserType.CUSTOMER) {
 
     try {
-      const products = await prisma.product.findMany({ include: { vender: { include: { User: true } } } })
+      const products = await prisma.product.findMany({ include: { vender: { include: { User: true } } }, orderBy: {id: 'desc'} })
 
       return res.status(200).json(products)
 
@@ -291,7 +295,7 @@ export const followPRoduct = async (req: Request, res: Response, next: NextFunct
   if (!productId)
     return res
       .status(400)
-      .json({ error: 'Request should have productId' });
+      .json({ message: 'Request should have productId' });
 
   try {
 
@@ -340,7 +344,7 @@ export const getFollowProduct = async (req: Request, res: Response, next: NextFu
   if (!userId)
     return res
       .status(400)
-      .json({ error: 'Request should have userId' });
+      .json({ message: 'Request should have userId' });
 
   try {
 
@@ -378,10 +382,17 @@ export const favoriteProduct = async (req: Request, res: Response, next: NextFun
   if (!productId)
     return res
       .status(400)
-      .json({ error: 'Request should have productId' });
+      .json({ message: 'Request should have productId' });
 
   try {
+    const existingFavorite = await prisma.favoriteProduct.findUnique({ where: { unique_favorite_products: {productId: productId,  userId: userId}}})
 
+    if (existingFavorite) {
+      return res
+      .status(409)
+      .json({ message: 'Product has already favorite' });
+    }
+    
     if (favorite) {
 
       await prisma.favoriteProduct.upsert({
@@ -428,7 +439,7 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
   if (!userId)
     return res
       .status(400)
-      .json({ error: 'Request should have userId' });
+      .json({ message: 'Request should have userId' });
 
   try {
 
@@ -466,7 +477,7 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
   if (!userId)
     return res
       .status(400)
-      .json({ error: 'Request should have userId' });
+      .json({ message: 'Request should have userId' });
 
   try {
     const categories = [
@@ -616,6 +627,33 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
       }
 
       return res.status(200).json(orderData)
+
+    } catch (error) {
+      console.log('err', error);
+      return res.status(500).json({ message: 'Something went wrong' })
+    }
+  } else {
+    return res.status(404).json({ message: 'User not found please login first' })
+
+  }
+
+};
+
+export const getOrderPending = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+
+  if (user.userType === UserType.CUSTOMER) {
+
+    try {
+
+      const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
+
+      const pendingOrder = orders.find((order) => {
+        if (order.status === OrderStatus.PENDING) {
+          return order
+        }
+      })
+      return res.status(200).json(pendingOrder)
 
     } catch (error) {
       console.log('err', error);
