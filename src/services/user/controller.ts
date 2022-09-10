@@ -436,7 +436,7 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
 
   try {
 
-    const favoriteProducts = await prisma.user.findUnique({ where: { id: userId }, include: { customer: { include: { FavoriteProduct: { include: { product: true } } } } } })
+    const favoriteProducts = await prisma.user.findUnique({ where: { id: userId }, include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
 
     if (favoriteProducts?.customer.FavoriteProduct) {
       return res.status(200).json(favoriteProducts?.customer.FavoriteProduct);
@@ -510,7 +510,7 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
       
     // }
     const category = await prisma.category.findMany()
-    
+
     return res.status(200).json(category);
   } catch (error) {
     return res.status(500).json(error);
