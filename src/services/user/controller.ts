@@ -385,13 +385,6 @@ export const favoriteProduct = async (req: Request, res: Response, next: NextFun
       .json({ message: 'Request should have productId' });
 
   try {
-    const existingFavorite = await prisma.favoriteProduct.findUnique({ where: { unique_favorite_products: { productId: productId, userId: userId } } })
-
-    if (existingFavorite) {
-      return res
-        .status(409)
-        .json({ message: 'Product has already favorite' });
-    }
 
     if (favorite) {
 
@@ -412,6 +405,7 @@ export const favoriteProduct = async (req: Request, res: Response, next: NextFun
         },
       })
 
+      return res.status(200).json({ success: true });
     } else {
 
       await prisma.favoriteProduct.delete({
@@ -422,9 +416,8 @@ export const favoriteProduct = async (req: Request, res: Response, next: NextFun
           }
         }
       })
-
+      return res.status(200).json({ success: false });
     }
-    return res.status(200).json({ success: true });
 
 
   } catch (error) {
