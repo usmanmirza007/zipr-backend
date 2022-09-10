@@ -275,7 +275,7 @@ export const getAllProduct = async (req: Request, res: Response, next: NextFunct
   if (user.userType === UserType.CUSTOMER) {
 
     try {
-      const products = await prisma.product.findMany({ include: { vender: { include: { User: true } } }, orderBy: {id: 'desc'} })
+      const products = await prisma.product.findMany({ include: { vender: { include: { User: true } } }, orderBy: { id: 'desc' } })
 
       return res.status(200).json(products)
 
@@ -385,14 +385,14 @@ export const favoriteProduct = async (req: Request, res: Response, next: NextFun
       .json({ message: 'Request should have productId' });
 
   try {
-    const existingFavorite = await prisma.favoriteProduct.findUnique({ where: { unique_favorite_products: {productId: productId,  userId: userId}}})
+    const existingFavorite = await prisma.favoriteProduct.findUnique({ where: { unique_favorite_products: { productId: productId, userId: userId } } })
 
     if (existingFavorite) {
       return res
-      .status(409)
-      .json({ message: 'Product has already favorite' });
+        .status(409)
+        .json({ message: 'Product has already favorite' });
     }
-    
+
     if (favorite) {
 
       await prisma.favoriteProduct.upsert({
@@ -443,29 +443,16 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
 
   try {
 
-    const user = await prisma.customer.findUnique({ where: { id: userId }, include: { FavoriteProduct: true } })
-    const orderCondition: Array<{ orderId: number }> = []
+    const favoriteProducts = await prisma.user.findUnique({ where: { id: userId }, include: { customer: { include: { FavoriteProduct: { include: { product: true } } } } } })
 
-    if (user) {
-      for (const prodcut of user.FavoriteProduct) {
-        orderCondition.push({ orderId: prodcut.id })
-      }
+    if (favoriteProducts?.customer.FavoriteProduct) {
+      return res.status(200).json(favoriteProducts?.customer.FavoriteProduct);
+    } else {
+      return res.status(404).json({ message: "Favorite product is not found." });
     }
 
-    const favoriteOrder = await prisma.favoriteProduct.findMany({
-      include: { product: true }
-    })
-    var singleUserFavoriteProduct: Array<any> = []
-    favoriteOrder.map((value) => {
-      if (value.userId == userId) {
-        singleUserFavoriteProduct.push(value.product)
-      }
-    })
-
-    if (singleUserFavoriteProduct.length) {
-      return res.status(200).json(singleUserFavoriteProduct);
-    }
   } catch (error) {
+    console.log('error', error);
     return res.status(500).json(error);
   }
 }
@@ -622,7 +609,7 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
       let orderData: Array<any> = []
       for (const order of orders) {
         for (const item of order.OrderItem) {
-          orderData.push({...item.product, orderId: order.id, orderItemId: item.id, quantity: item.quantity, totalPrice: order.price, status: order.status})
+          orderData.push({ ...item.product, orderId: order.id, orderItemId: item.id, quantity: item.quantity, totalPrice: order.price, status: order.status })
         }
       }
 
@@ -669,36 +656,36 @@ export const getOrderPending = async (req: Request, res: Response, next: NextFun
 export const getAllOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
 
-    try {
+  try {
 
-      const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
+    const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
 
-      let orderData: Array<any> = []
-      for (const order of orders) {
-        for (const item of order.OrderItem) {
-          if (order.id === item.orderId) {
-            orderData.push({orderId: item.orderId, picture: item.product.picture})
-          }
+    let orderData: Array<any> = []
+    for (const order of orders) {
+      for (const item of order.OrderItem) {
+        if (order.id === item.orderId) {
+          orderData.push({ orderId: item.orderId, picture: item.product.picture })
         }
       }
-      let pictures: Array<any> = []
-
-      for (const order of orders) {
-        for (const data of orderData) {
-          if (data.orderId === order.id) {
-            for (const picture of data.picture) {
-              pictures.push({picture: picture});
-            }
-          }
-        }
-      }
-      
-      return res.status(200).json({orders, pictures });
-
-    } catch (error) {
-      console.log('err', error);
-      return res.status(500).json({ message: 'Something went wrong' })
     }
+    let pictures: Array<any> = []
+
+    for (const order of orders) {
+      for (const data of orderData) {
+        if (data.orderId === order.id) {
+          for (const picture of data.picture) {
+            pictures.push({ picture: picture });
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({ orders, pictures });
+
+  } catch (error) {
+    console.log('err', error);
+    return res.status(500).json({ message: 'Something went wrong' })
+  }
 
 };
 
@@ -706,7 +693,7 @@ export const getAllOrder = async (req: Request, res: Response, next: NextFunctio
 export const deleteOrderItem = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
   const { itemId } = req.params
-  
+
   if (user.userType === UserType.CUSTOMER) {
 
     try {
