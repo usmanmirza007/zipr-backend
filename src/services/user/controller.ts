@@ -436,10 +436,18 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
 
   try {
 
-    const favoriteProducts = await prisma.user.findUnique({ where: { id: userId }, include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
+    const favoriteProducts = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
 
-    if (favoriteProducts?.customer.FavoriteProduct) {
-      return res.status(200).json(favoriteProducts?.customer.FavoriteProduct);
+    let allUserFavoriteProducts: Array<any> = []
+
+    if (favoriteProducts.length) {
+      for (const favoriteProduct of favoriteProducts) {
+        allUserFavoriteProducts.push(...favoriteProduct.customer.FavoriteProduct)
+      }
+    }
+      
+    if (allUserFavoriteProducts.length) {
+      return res.status(200).json(allUserFavoriteProducts);
     } else {
       return res.status(404).json({ message: "Favorite product is not found." });
     }
