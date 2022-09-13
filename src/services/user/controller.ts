@@ -429,25 +429,27 @@ export const favoriteProduct = async (req: Request, res: Response, next: NextFun
 export const getFavoriteProduct = async (req: Request, res: Response, next: NextFunction) => {
 
   const userId = (req as any).user.id
-  if (!userId)
-    return res
-      .status(400)
-      .json({ message: 'Request should have userId' });
 
   try {
 
-    const favoriteProducts = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
+    // const favoriteProducts = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
+    const favoriteLists = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: true } } } })
+    let productIdCondition: Array<{ id: number }> = []
 
-    let allUserFavoriteProducts: Array<any> = []
-
-    if (favoriteProducts.length) {
-      for (const favoriteProduct of favoriteProducts) {
-        allUserFavoriteProducts.push(...favoriteProduct.customer.FavoriteProduct)
+    if (favoriteLists.length) {
+      for (const favoriteList of favoriteLists) {
+        if (favoriteList.customer.FavoriteProduct.length) {
+          for (const favorite of favoriteList.customer.FavoriteProduct) {
+            productIdCondition.push({ id: favorite.productId })
+          }
+        }
       }
     }
-      
-    if (allUserFavoriteProducts.length) {
-      return res.status(200).json(allUserFavoriteProducts);
+
+    const favoriteProducts = await prisma.product.findMany({ where: { OR: productIdCondition }, include: { vender: { include: { User: true } } } })
+
+    if (favoriteProducts.length) {
+      return res.status(200).json(favoriteProducts);
     } else {
       return res.status(404).json({ message: "Favorite product is not found." });
     }
@@ -512,10 +514,10 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
       { label: "Convenience Suppies", value: "Convenience Suppies" },
       { label: "Other", value: "Other" }
     ]
-  
+
     // for (const cate of categories) {
     //   await prisma.category.create({data: {label: cate.label, value: cate.value}})
-      
+
     // }
     const category = await prisma.category.findMany()
 
