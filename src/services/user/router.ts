@@ -17,6 +17,7 @@ userRouter.route('/follow').post(jwt(secret_key), controller.followPRoduct);
 userRouter.route('/follow').get(jwt(secret_key), controller.getFollowProduct);
 userRouter.route('/favorite').post(jwt(secret_key), controller.favoriteProduct);
 userRouter.route('/favorite').get(jwt(secret_key), controller.getFavoriteProduct);
+userRouter.route('/userFavorite').get(jwt(secret_key), controller.getSingleFavoriteProduct);
 userRouter.route('/category').get(jwt(secret_key), controller.getCategory);
 userRouter.route('/order').post(jwt(secret_key), controller.addOrder);
 userRouter.route('/order').get(jwt(secret_key), controller.getOrder);
