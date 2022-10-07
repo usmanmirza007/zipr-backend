@@ -433,22 +433,23 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
   try {
 
     // const favoriteProducts = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
-    const favoriteLists = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: true } } } })
-    let productIdCondition: Array<{ id: number }> = []
+    // const favoriteLists = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: true } } } })
+    const favoriteLists = await prisma.favoriteProduct.findMany({ where: {userId: userId}, include: {product: {include: {vender: {include: {User: true }}}}}})
+    // let productIdCondition: Array<{ id: number }> = []
     
-    if (favoriteLists.length) {
-      for (const favoriteList of favoriteLists) {
-        if (favoriteList.customer.FavoriteProduct.length) {
-          for (const favorite of favoriteList.customer.FavoriteProduct) {
-            productIdCondition.push({ id: favorite.productId })
-          }
-        }
-      }
-    }
+    // if (favoriteLists.length) {
+    //   for (const favoriteList of favoriteLists) {
+    //     if (favoriteList.customer.FavoriteProduct.length) {
+    //       for (const favorite of favoriteList.customer.FavoriteProduct) {
+    //         productIdCondition.push({ id: favorite.productId })
+    //       }
+    //     }
+    //   }
+    // }
 
-    const favoriteProducts = await prisma.product.findMany({ where: { OR: productIdCondition }, include: { vender: { include: { User: true } } } })
+    // const favoriteProducts = await prisma.product.findMany({ where: { OR: productIdCondition }, include: { vender: { include: { User: true } } } })
     
-    return res.status(200).json(favoriteProducts);
+    return res.status(200).json(favoriteLists);
   } catch (error) {
     return res.status(500).json(error);
   }
