@@ -95,7 +95,6 @@ enum OrderStatus {
   PROOCESSING          // When the order is accepts
   DISPATCHED           // when the order is given to delivery boy
   DELIVERED            // when the order is get customer from delivery boy
-  COMPLETED            // when the order is received from delivery boy
 }
 
 model Order {
