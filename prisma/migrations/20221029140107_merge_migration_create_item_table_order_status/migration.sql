@@ -5,6 +5,7 @@
   - You are about to drop the column `name` on the `Order` table. All the data in the column will be lost.
   - You are about to drop the column `picture` on the `Order` table. All the data in the column will be lost.
   - You are about to drop the column `quantity` on the `Order` table. All the data in the column will be lost.
+  - The values [DISPATCH,ACCEPT] on the enum `Order_status` will be removed. If these variants are still used in the database, this will fail.
   - You are about to drop the `CheckoutOrder` table. If the table is not empty, all the data it contains will be lost.
   - Added the required column `shipingPrice` to the `Order` table without a default value. This is not possible if the table is not empty.
   - Added the required column `totalPrice` to the `Order` table without a default value. This is not possible if the table is not empty.
@@ -20,7 +21,8 @@ ALTER TABLE `Order` DROP COLUMN `description`,
     DROP COLUMN `quantity`,
     ADD COLUMN `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     ADD COLUMN `shipingPrice` DOUBLE NOT NULL,
-    ADD COLUMN `totalPrice` DOUBLE NOT NULL;
+    ADD COLUMN `totalPrice` DOUBLE NOT NULL,
+    MODIFY `status` ENUM('PENDING', 'CAPTUREED', 'PROOCESSING', 'DISPATCHED', 'DELIVERED', 'COMPLETED') NOT NULL;
 
 -- DropTable
 DROP TABLE `CheckoutOrder`;
