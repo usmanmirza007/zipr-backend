@@ -94,6 +94,7 @@ enum OrderStatus {
   CAPTUREED            // when the order is add payment  
   PROOCESSING          // When the order is accepts
   DISPATCHED           // when the order is given to delivery boy
+  COMPLETED            
   DELIVERED            // when the order is get customer from delivery boy
 }
 
