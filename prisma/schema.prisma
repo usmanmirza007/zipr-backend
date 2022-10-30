@@ -98,6 +98,15 @@ enum OrderStatus {
   COMPLETED   
   COMPLETED_ORDER         
 }
+enum Status {
+  PENDING              
+  CAPTUREED              
+  PROOCESSING          
+  DISPATCHED           
+  DELIVERED            
+  COMPLETED   
+  COMPLETED_ORDER         
+}
 
 model Order {
   id           Int         @id @default(autoincrement())
@@ -107,7 +116,7 @@ model Order {
   shipingPrice Float
   totalPrice   Float
   createdAt    DateTime    @default(now())
-  status       OrderStatus
+  status       Status
   OrderItem    OrderItem[]
 }
 

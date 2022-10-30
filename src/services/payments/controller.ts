@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, ErrorRequestHandler } from 'express';
-import { OrderStatus, PrismaClient, UserType } from '@prisma/client';
+import {  PrismaClient, Status, UserType } from '@prisma/client';
 import { attachPaymentMethod, createCustomer, createMethod, createPayment } from '../../../provider/stripe';
 
 const prisma = new PrismaClient();
@@ -39,10 +39,10 @@ export const addPayment = async (req: Request, res: Response, next: NextFunction
           await prisma.order.updateMany({
             where: {
               customerId: userId,
-              status: OrderStatus.PENDING
+              status: Status.PENDING  // OrderStatus.PENDING
             },
             data: {
-              status: OrderStatus.CAPTUREED
+              status: Status.CAPTUREED  // OrderStatus.CAPTUREED
             }
           })
         }

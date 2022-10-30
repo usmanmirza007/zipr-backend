@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { OrderStatus, PrismaClient, UserType } from '@prisma/client';
+import { PrismaClient, Status, UserType } from '@prisma/client';
 import { secret_key } from '../../../secret';
 const jwt = require('jsonwebtoken')
 var bcrypt = require('bcryptjs');
@@ -539,10 +539,10 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
   const user = (req as any).user
   const { orderId, productId, price, quantity, orderStatus } = req.body;
 
-  let status: OrderStatus = orderStatus
+  let status: Status = orderStatus
 
-  if (orderStatus === OrderStatus.PENDING) {
-    status = OrderStatus.PENDING;
+  if (orderStatus === Status.PENDING) {
+    status = Status.PENDING;
   }
 
   if (user.userType === UserType.CUSTOMER) {
@@ -647,7 +647,7 @@ export const getOrderPending = async (req: Request, res: Response, next: NextFun
       const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
 
       const pendingOrder = orders.find((order) => {
-        if (order.status === OrderStatus.PENDING) {
+        if (order.status === Status.PENDING) {
           return order
         }
       })
