@@ -33,17 +33,19 @@ model Vender {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  firstName  String
-  lastName   String
-  email      String   @unique
-  password   String?
-  picture    String?
-  userType   UserType
-  customer   Customer @relation(fields: [venderId], references: [id], onDelete: Cascade)
-  venderId   Int
-  vender     Vender   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId Int
+  id                   Int                 @id @default(autoincrement())
+  firstName            String
+  lastName             String
+  email                String              @unique
+  password             String?
+  picture              String?
+  userType             UserType
+  customer             Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId           Int
+  vender               Vender              @relation(fields: [venderId], references: [id], onDelete: Cascade)
+  venderId             Int
+  Chat                 Chat[]
+  UserChatConnection   UserChatConnection?
 }
 
 model Product {
@@ -90,22 +92,23 @@ model FavoriteProduct {
 }
 
 enum OrderStatus {
-  PENDING              // when the order is add in checkout
-  CAPTUREED            // when the order is add payment  
-  PROOCESSING          // When the order is accepts
-  DISPATCHED           // when the order is given to delivery boy
-  DELIVERED            // when the order is get customer from delivery boy
-  COMPLETED   
-  COMPLETED_ORDER         
+  PENDING // when the order is add in checkout
+  CAPTUREED // when the order is add payment  
+  PROOCESSING // When the order is accepts
+  DISPATCHED // when the order is given to delivery boy
+  DELIVERED // when the order is get customer from delivery boy
+  COMPLETED
+  COMPLETED_ORDER
 }
+
 enum Status {
-  PENDING              
-  CAPTUREED              
-  PROOCESSING          
-  DISPATCHED           
-  DELIVERED            
-  COMPLETED   
-  COMPLETED_ORDER         
+  PENDING
+  CAPTUREED
+  PROOCESSING
+  DISPATCHED
+  DELIVERED
+  COMPLETED
+  COMPLETED_ORDER
 }
 
 model Order {
@@ -127,4 +130,23 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int
   quantity  Int
+}
+
+model Chat {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  roomId     String   @default("")
+  message    String   @db.LongText()
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+}
+
+model UserChatConnection {
+  id        Int      @id @default(autoincrement())
+  socketId  String
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int      @unique
 }

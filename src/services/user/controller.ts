@@ -434,9 +434,9 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
 
     // const favoriteProducts = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: { include: { product: { include: { vender: { include: { User: true } } } } } } } } } })
     // const favoriteLists = await prisma.user.findMany({ include: { customer: { include: { FavoriteProduct: true } } } })
-    const favoriteLists = await prisma.favoriteProduct.findMany({ where: {userId: userId}, include: {product: {include: {vender: {include: {User: true }}}}}})
+    const favoriteLists = await prisma.favoriteProduct.findMany({ where: { userId: userId }, include: { product: { include: { vender: { include: { User: true } } } } } })
     // let productIdCondition: Array<{ id: number }> = []
-    
+
     // if (favoriteLists.length) {
     //   for (const favoriteList of favoriteLists) {
     //     if (favoriteList.customer.FavoriteProduct.length) {
@@ -448,7 +448,7 @@ export const getFavoriteProduct = async (req: Request, res: Response, next: Next
     // }
 
     // const favoriteProducts = await prisma.product.findMany({ where: { OR: productIdCondition }, include: { vender: { include: { User: true } } } })
-    
+
     return res.status(200).json(favoriteLists);
   } catch (error) {
     return res.status(500).json(error);
@@ -749,13 +749,13 @@ export const getProductWithTag = async (req: Request, res: Response, next: NextF
 
   const userId = (req as any).user.id
   const { tag } = req.params
-  
+
   try {
-    const products = await prisma.product.findMany({include: {vender: {include: {User: true }}}})
+    const products = await prisma.product.findMany({ include: { vender: { include: { User: true } } } })
     const filterProducts = products.filter((product) => {
       const tags = JSON.parse(JSON.stringify(product.tag))
       return tags.includes(tag)
-    } )
+    })
     return res.status(200).json(filterProducts);
 
   } catch (error) {
@@ -768,26 +768,25 @@ export const getProductWithTag = async (req: Request, res: Response, next: NextF
 export const changeOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
   const { orderStatus, orderId } = req.body
- 
-    try {
 
-      const orders = await prisma.order.findUnique({ where: { id: parseInt(orderId) } })
+  try {
 
-      if (orders) {
-        const order = await prisma.order.update({ 
-          where: { id: orders.id },
-          data: {
-            status: orderStatus
-          }
+    const orders = await prisma.order.findUnique({ where: { id: parseInt(orderId) } })
 
-         })
-      }
-      return res.status(200).json({ success: true })
+    if (orders) {
+      const order = await prisma.order.update({
+        where: { id: orders.id },
+        data: {
+          status: orderStatus
+        }
 
-    } catch (error) {
-      console.log('err', error);
-      return res.status(500).json({ message: 'Something went wrong' })
+      })
     }
-  
+    return res.status(200).json({ success: true })
+
+  } catch (error) {
+    console.log('err', error);
+    return res.status(500).json({ message: 'Something went wrong' })
+  }
 
 };
