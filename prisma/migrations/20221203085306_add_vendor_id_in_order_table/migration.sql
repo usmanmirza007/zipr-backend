@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `Order` ADD COLUMN `venderId` INTEGER NOT NULL DEFAULT 0;
+
+-- AddForeignKey
+ALTER TABLE `Order` ADD CONSTRAINT `Order_venderId_fkey` FOREIGN KEY (`venderId`) REFERENCES `Vender`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

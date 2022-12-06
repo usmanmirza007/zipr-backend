@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, ErrorRequestHandler } from 'express';
-import {  PrismaClient, Status, UserType } from '@prisma/client';
+import { PrismaClient, Status, UserType } from '@prisma/client';
 import { attachPaymentMethod, createCustomer, createMethod, createPayment } from '../../../provider/stripe';
 
 const prisma = new PrismaClient();
@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 export const addPayment = async (req: Request, res: Response, next: NextFunction) => {
   const userId = (req as any).user.id
 
-  const { name, cardNumber, cvv, expireDate, price } = req.body;
+  const { name, cardNumber, cvv, expireDate, price, payment } = req.body;
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
 
@@ -22,7 +22,7 @@ export const addPayment = async (req: Request, res: Response, next: NextFunction
   try {
 
 
-    if (user) {
+    if (user && payment) {
       const sliptDate = expireDate.split('-')
       const year = parseInt(sliptDate[0])
       const month = parseInt(sliptDate[1])
@@ -50,6 +50,19 @@ export const addPayment = async (req: Request, res: Response, next: NextFunction
       }
 
       return res.status(200).json({ success: true })
+    } else {
+      
+      await prisma.order.updateMany({
+        where: {
+          customerId: userId,
+          status: Status.PENDING  // OrderStatus.PENDING
+        },
+        data: {
+          status: Status.CAPTUREED  // OrderStatus.CAPTUREED
+        }
+      })
+      return res.status(200).json({ success: true })
+
     }
 
   } catch (error) {

@@ -537,7 +537,7 @@ export const getCategory = async (req: Request, res: Response, next: NextFunctio
 
 export const addOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
-  const { orderId, productId, price, quantity, orderStatus } = req.body;
+  const { orderId, productId, price, quantity, orderStatus, venderId } = req.body;
 
   let status: Status = orderStatus
 
@@ -581,7 +581,8 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
             customerId: parseInt(user.id),
             shipingPrice: 0,
             totalPrice: 0,
-            status: status
+            status: status,
+            venderId: venderId
           }
         })
 
@@ -664,12 +665,48 @@ export const getOrderPending = async (req: Request, res: Response, next: NextFun
 
 };
 
-export const getAllOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllCustomerOrder = async (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user
 
   try {
 
     const orders = await prisma.order.findMany({ where: { customerId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
+
+    let orderData: Array<any> = []
+    for (const order of orders) {
+      for (const item of order.OrderItem) {
+        if (order.id === item.orderId) {
+          orderData.push({ orderId: item.orderId, picture: item.product.picture })
+        }
+      }
+    }
+    let pictures: Array<any> = []
+
+    for (const order of orders) {
+      for (const data of orderData) {
+        if (data.orderId === order.id) {
+          for (const picture of data.picture) {
+            pictures.push({ picture: picture });
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({ orders, pictures });
+
+  } catch (error) {
+    console.log('err', error);
+    return res.status(500).json({ message: 'Something went wrong' })
+  }
+
+};
+
+export const getAllVendorOrder = async (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user
+
+  try {
+
+    const orders = await prisma.order.findMany({ where: { venderId: parseInt(user.id) }, include: { OrderItem: { include: { product: true } } } })
 
     let orderData: Array<any> = []
     for (const order of orders) {
