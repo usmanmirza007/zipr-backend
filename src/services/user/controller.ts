@@ -549,32 +549,6 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
 
     try {
 
-      if (orderId) {
-
-        const getOrderItem = await prisma.orderItem.findMany({ where: { orderId: parseInt(orderId) }, include: { product: true } })
-        let totalPrice = price
-        for (const item of getOrderItem) {
-
-          totalPrice += item.product.price
-        }
-
-        const orderItem = await prisma.orderItem.create({
-          data: {
-            orderId: orderId,
-            productId: productId,
-            quantity: quantity,
-          }
-        })
-        const order = await prisma.order.update({
-          where: { id: orderId },
-          data: {
-            price: totalPrice,
-          }
-        })
-
-        return res.status(200).json(order)
-
-      } else {
         const order = await prisma.order.create({
           data: {
             price: parseFloat(price),
@@ -596,7 +570,6 @@ export const addOrder = async (req: Request, res: Response, next: NextFunction) 
 
         })
         return res.status(200).json(order)
-      }
 
     } catch (error) {
       console.log('err', error);
